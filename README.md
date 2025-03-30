@@ -1,6 +1,6 @@
 # MLOps-project-demo
 
-## Title of project
+## Vision to Vintage: AI’s Take on Classical Art
 
 <!-- 
 Discuss: Value proposition: Your will propose a machine learning system that can be 
@@ -12,6 +12,36 @@ judged on? (Note that the “service” does not have to be for general users; y
 propose a system for a science problem, for example.)
 -->
 
+### Discuss: Value proposition:
+
+_Current Status Quo_
+ 
+The **Metropolitan Museum of Art** relies on **traditional engagement methods** such as guided tours, plaques, and audio guides to educate visitors. While effective, these methods are **passive and lack personalization**, limiting engagement, particularly for younger and casual visitors.
+ 
+_Proposed AI System_
+
+We introduce an **interactive AI-powered exhibit** that allows visitors to:
+1.  **Submit or choose a photo**, which is analyzed using object detection.
+2.  **Apply artist-specific styles** based on the detected content.
+3.  **Guess the artist** in a gamified challenge, reinforcing learning.
+4.  **Receive AI-generated explanations** on stylistic features to deepen understanding.
+ 
+_Business Value_
+ 
+*   **Enhances Visitor Engagement** – Transforms passive observation into interactive exploration.
+*   **Educational & Gamified Experience** – Visitors actively learn about artists through play. 
+*   **Data-Driven Insights** – Visitor interactions inform exhibit improvements and preferences.
+*   **Potential Monetization** – AI-generated artworks can be sold as prints or digital souvenirs.
+ 
+_Effectiveness & Model Monitoring_
+ 
+*   **Success Metric:** Visitors correctly identifying artists more often over time.
+*   **User Feedback Loop:** If accuracy is low, retrain models to improve style transformations.
+*   **Re-training Triggers:** Poor user engagement, incorrect classifications, or visitor feedback indicating confusion.
+ 
+This system modernizes **art appreciation through AI**, making it interactive, educational, and engaging while driving business value for The Met.
+
+
 ### Contributors
 
 <!-- Table of contributors and their roles. 
@@ -22,11 +52,11 @@ link to their contributions in all repos here. -->
 
 | Name                            | Responsible for | Link to their commits in this repo |
 |---------------------------------|-----------------|------------------------------------|
-| All team members                |                 |                                    |
-| Team member 1                   |                 |                                    |
-| Team member 2                   |                 |                                    |
-| Team member 3                   |                 |                                    |
-| Team member 4 (if there is one) |                 |                                    |
+| All team members|                 |                                    |
+| Aryaman Dev     |                 |                                    |
+| Mona Mei        |                 |                                    |
+| Shruti Karmarkar|                 |                                    |
+| Varijaksh Katti |                 |                                    |
 
 
 
@@ -35,19 +65,60 @@ link to their contributions in all repos here. -->
 <!-- Overall digram of system. Doesn't need polish, does need to show all the pieces. 
 Must include: all the hardware, all the containers/software platforms, all the models, 
 all the data. -->
+_1\. User Interaction (Frontend)_
+* **Web Interface
+    *   Users upload or select a pho
+    *   Display of stylized imag
+    *   Interactive quiz (Guess the Artis
+    *   Feedback collecti
+ 
+_2\. Backend Processing & AI Models_
+* **Data Pipeline (Preprocessing & Storage)**
+    *   Image Upload Handling (Cloud Storage)
+    *   Object Detection Model (Detects subject in image)
+    *   Artist-Style Mapping
+* **Machine Learning Models**
+    *   **Style Transfer Model** (Applies the artist’s style based on detected subject)
+    *   **Artist Classification Model** (Predicts which artist matches the style)
+    *   **Explainable AI (XAI) Module** (Highlights key style features to justify classification)
+ 
+ * **Containers & Deployment**
+    *   Hosted on **Cloud (Chameleon)**
+    *   Backend API (FastAPI)
+    *   Models served using **TensorFlow Serving / TorchServe**
+    *   Database for storing user interactions & feedback
+ 
+_3\. Monitoring & Continuous Learning_
+* **Feedback Loop for Model Retraining**
+    *   Logs user guesses and correctness
+    *   If misclassifications increase, triggers retraining
+    *   Stores new labeled data for future fine-tuning
+ 
+_4\. Hardware Components_
+* **On-Site Hardware (Museum Kiosk Setup)**
+    *   Touchscreen kiosks for museum visitors
+    *   High-performance GPU server for real-time inference (if processing is done on-premise)
+*  **Cloud Infrastructure (If Hosted Remotely)**
+    *   Cloud-based **storage, computing, and model hosting**
+    *   Edge computing for **faster inference at museum locations**
+    
+
 
 ### Summary of outside materials
 
 <!-- In a table, a row for each dataset, foundation model. 
 Name of data/model, conditions under which it was created (ideally with links/references), 
 conditions under which it may be used. -->
+Here’s a structured table for summarizing the outside materials used in our project:
 
 |              | How it was created | Conditions of use |
 |--------------|--------------------|-------------------|
-| Data set 1   |                    |                   |
-| Data set 2   |                    |                   |
-| Base model 1 |                    |                   |
-| etc          |                    |                   |
+|**CIFAR-10 / CIFAR-100** |Created by the **Canadian Institute for Advanced Research**, containing labeled images for object detection and classification. [Link](https://www.cs.toronto.edu/~kriz/cifar.html)|      Open-source under the **MIT License**; freely usable for research and educational purposes. |
+|**Metropolitan Museum Open Access Collection** |High-resolution public domain images of artworks from The Met’s collection. [Link](https://www.metmuseum.org/about-the-met/policies-and-documents/open-access)| **Creative Commons Zero (CC0)**—can be freely used, modified, and distributed.|
+|**WikiArt Dataset**| Large dataset of artwork images with metadata, scraped from WikiArt. [Link](https://github.com/cs-chan/ArtGAN) | Publicly available, but usage requires compliance with **WikiArt's terms**. |
+| **COCO Dataset**   |Large-scale object detection dataset for training image recognition models. [Link](https://cocodataset.org/)|Freely available for **non-commercial research and educational use**. |
+|**VGG-19 Model**|Pre-trained convolutional neural network (CNN) used for style transfer. [Link](https://pytorch.org/vision/stable/models.html)|Open-source under **MIT License**, can be used for academic research.|
+|**CLIP (Contrastive Language–Image Pretraining)**|Foundation model by OpenAI that connects images and text for classification. [Link](https://openai.com/research/clip)|Open-source for **non-commercial research**; commercial usage requires permission.|
 
 
 ### Summary of infrastructure requirements
@@ -56,12 +127,19 @@ conditions under which it may be used. -->
 how much/when, justification. Include compute, floating IPs, persistent storage. 
 The table below shows an example, it is not a recommendation. -->
 
+Here’s a table summarizing the anticipated **infrastructure requirements** for our project:
+
 | Requirement     | How many/when                                     | Justification |
 |-----------------|---------------------------------------------------|---------------|
-| `m1.medium` VMs | 3 for entire project duration                     | ...           |
-| `gpu_mi100`     | 4 hour block twice a week                         |               |
-| Floating IPs    | 1 for entire project duration, 1 for sporadic use |               |
-| etc             |                                                   |               |
+| `m1.medium` VMs | 3 for entire project duration                     |For hosting the backend API and data pipeline services, including user interface handling and model serving. Moderate compute power needed for image processing and interaction.|
+| `gpu_mi100`     |6-hour block twice a week                      | For training the deep learning models (Style Transfer and Artist Classification) requiring GPU acceleration for high throughput and speed.|
+| Floating IPs    | 1 for the entire project duration, 1 for sporadic use |To support external access to the cloud-based API and services during development/testing and occasional live sessions (public demo).|
+|Persistent Storage      | 500GB for the project duration (scalable)   | For storing large image datasets (e.g., museum artwork), user-uploaded images, processed results, and logs. Essential for persistent data handling across sessions. |
+|Object Storage (e.g., S3)|1TB for training data and intermediate outputs|Cloud storage for dataset storage (CIFAR, WikiArt, Met dataset) and model checkpoints. Ensures efficient retrieval and scalability.|
+|Compute-Intensive Server|2-3 instances of high-performance servers (GPU-enabled)|Needed for high-load processing during inference tasks for style transformation and real-time interaction.|
+|Load Balancer|1 for the entire project duration|To balance the traffic between multiple backend servers during peak user activity (e.g., high foot traffic at the museum).|
+
+This infrastructure setup supports the different phases of the project, including data processing, model training, deployment, and real-time user interactions.
 
 ### Detailed design plan
 
