@@ -66,7 +66,7 @@ link to their contributions in all repos here. -->
 Must include: all the hardware, all the containers/software platforms, all the models, 
 all the data. -->
 _1\. User Interaction (Frontend)_
-* **Web Interface
+* **Web Interface**
     *   Users upload or select a pho
     *   Display of stylized imag
     *   Interactive quiz (Guess the Artis
