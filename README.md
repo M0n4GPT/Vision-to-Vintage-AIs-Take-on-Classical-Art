@@ -147,10 +147,85 @@ This infrastructure setup supports the different phases of the project, includin
 diagram, (3) justification for your strategy, (4) relate back to lecture material, 
 (5) include specific numbers. -->
 
+
+
 #### Model training and training platforms
 
 <!-- Make sure to clarify how you will satisfy the Unit 4 and Unit 5 requirements, 
 and which optional "difficulty" points you are attempting. -->
+
+
+
+##### Training Strategy
+Our model training pipeline is designed for scalability and efficiency. Given that our project focuses on art style transfer and artist classification, we will use:
+
+- **Distributed Data Parallel (DDP)** for efficient multi-GPU training, ensuring faster convergence for high-resolution style transfer models.
+- **Fully Sharded Data Parallel (FSDP)** to enable large model training by sharding model parameters across GPUs, crucial for handling complex artistic transformations.
+- **Optimized batch sizing** to balance memory constraints and computational efficiency, considering the high pixel resolution of artistic datasets.
+
+We will conduct experiments comparing training time and performance using:
+- Single-GPU vs. Multi-GPU training (with DDP and FSDP) to evaluate the impact on style transfer efficiency.
+- Effect of batch size variations on convergence speed and model accuracy, specifically for artist classification tasks. We will experiment with batch sizes ranging **from 8 to 64**, measuring the impact on training time and model performance (accuracy and convergence speed).
+
+##### Experiment Tracking
+To log and analyze training experiments, we will host an **MLFlow tracking server** on Chameleon. Our logging will include:
+
+- Model parameters (architecture, hyperparameters, and optimizer) relevant for optimizing artistic style transformations and classification.
+- Training metrics such as **content loss, style loss, and classification accuracy** to assess both the effectiveness of style transfer and model precision in identifying artists.
+- Comparative results from different training strategies and style transfer configurations.
+- Registered models for version control and reusability, allowing for continuous improvement based on user feedback from our interactive platform.
+
+<!--We will:
+- **Start and configure the MLFlow tracking server**.
+- **Access dashboards for real-time monitoring**.
+- **Start a Jupyter server** for interactive experiment analysis.
+- **Log training runs from both PyTorch and Lightning models**.
+- **Compare experiments and use MLFlow outside of training runs**.
+- **Stop the MLFlow system when needed**.
+
+This allows us to retrain models effectively based on new artistic datasets and evolving user preferences.
+-->
+
+##### Training Job Scheduling
+We will deploy a **Ray cluster** to schedule and distribute training jobs across multiple GPUs. The Ray cluster will be configured with at least **2 GPUs** (NVIDIA V100 or A100), ensuring enough parallel computation for large-scale model training.
+
+- **Parallelized execution of multiple training experiments**, such as training different style transfer models concurrently.
+- **Dynamic resource allocation** to optimize GPU utilization, ensuring efficient processing of various artistic styles.
+- **Checkpointing and fault tolerance** using Ray Train, critical for long-running style adaptation tasks.
+- **Ray Train with multiple workers and fractional GPUs**, allowing multiple style transformations to be fine-tuned simultaneously.
+
+<!--We will:
+- **Start and configure the Ray cluster on NVIDIA GPUs**.
+- **Start a Jupyter container** to manage job submissions.
+- **Access the Ray cluster dashboard** for monitoring.
+- **Submit training jobs with Ray Train and handle infeasible jobs**.
+- **Implement Ray Train fault tolerance using FailureConfig**.
+- **Stop the Ray system when needed**.
+-->
+
+##### Hyperparameter Tuning
+For hyperparameter optimization, we will use **Ray Tune**, which allows:
+
+- **Automated tuning** with advanced algorithms (e.g., Bayesian optimization, ASHA) to refine **style transfer parameters**.
+- **Efficient resource allocation** to test different hyperparameter sets concurrently, such as finding the optimal style weight for preserving both artistic details and content structure.
+- **Logging in MLFlow** to track the best configurations for both style transfer and artist classification.
+
+<!--
+We will:
+- **Use Ray Tune for hyperparameter optimization**.
+- **Leverage new Ray Tune features for improved efficiency**.
+- **Optimize parameters related to stroke consistency, color preservation, and feature extraction in style transfer models**.
+-->
+
+##### Infrastructure Requirements for This Part
+- **GPU Cluster**: Multi-GPU setup for DDP/FSDP experiments, ensuring scalable training for high-resolution images.
+- **Persistent Storage**: To store training datasets and model checkpoints, preserving both original artworks and transformed outputs.
+- **Chameleon Cloud**: Hosting MLFlow and Ray cluster, providing an adaptable research environment.
+- **Ray Cluster**: To distribute training and tuning jobs efficiently, supporting multiple concurrent style transformations.
+
+
+
+
 
 #### Model serving and monitoring platforms
 
