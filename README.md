@@ -132,7 +132,7 @@ Here’s a table summarizing the anticipated **infrastructure requirements** for
 | Requirement     | How many/when                                     | Justification |
 |-----------------|---------------------------------------------------|---------------|
 | `m1.medium` VMs | 3 for entire project duration                     |For hosting the backend API and data pipeline services, including user interface handling and model serving. Moderate compute power needed for image processing and interaction.|
-| `gpu_mi100`     |6-hour block twice a week                      | For training the deep learning models (Style Transfer and Artist Classification) requiring GPU acceleration for high throughput and speed.|
+| `gpu_mi100` or `compute_liqid` with two GPUs  |6-hour block twice a week                      | For training the deep learning models (Style Transfer and Artist Classification) requiring GPU acceleration for high throughput and speed. For the “Ray” section.|
 | Floating IPs    | 1 for the entire project duration, 1 for sporadic use |To support external access to the cloud-based API and services during development/testing and occasional live sessions (public demo).|
 |Persistent Storage      | 500GB for the project duration (scalable)   | For storing large image datasets (e.g., museum artwork), user-uploaded images, processed results, and logs. Essential for persistent data handling across sessions. |
 |Object Storage (e.g., S3)|1TB for training data and intermediate outputs|Cloud storage for dataset storage (CIFAR, WikiArt, Met dataset) and model checkpoints. Ensures efficient retrieval and scalability.|
