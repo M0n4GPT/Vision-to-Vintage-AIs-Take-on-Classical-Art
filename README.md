@@ -52,9 +52,9 @@ link to their contributions in all repos here. -->
 
 | Name                            | Responsible for | Link to their commits in this repo |
 |---------------------------------|-----------------|------------------------------------|
-| All team members|                 |                                    |
+| All team members|Project idea, value proposition, ML problem setup (data, target variable), approach for each part, overall integration | N/A |
 | Aryaman Dev     |                 |                                    |
-| Mona Mei        |                 |                                    |
+| Mona Mei        |Model training   |                                    |
 | Shruti Karmarkar|                 |                                    |
 | Varijaksh Katti |                 |                                    |
 
@@ -67,10 +67,10 @@ Must include: all the hardware, all the containers/software platforms, all the m
 all the data. -->
 _1\. User Interaction (Frontend)_
 * **Web Interface**
-    *   Users upload or select a pho
-    *   Display of stylized imag
-    *   Interactive quiz (Guess the Artis
-    *   Feedback collecti
+    *   Users upload or select a photo 
+    *   Display of stylized images 
+    *   Interactive quiz (Guess the Artist) 
+    *   Feedback collection 
  
 _2\. Backend Processing & AI Models_
 * **Data Pipeline (Preprocessing & Storage)**
