@@ -53,7 +53,7 @@ link to their contributions in all repos here. -->
 | Name                            | Responsible for | Link to their commits in this repo |
 |---------------------------------|-----------------|------------------------------------|
 | All team members|Project idea, value proposition, ML problem setup (data, target variable), approach for each part, overall integration | N/A |
-| Aryaman Dev     |                 |                                    |
+| Aryaman Dev     |Model serving and monitoring                 |                                    |
 | Mona Mei        |Model training   |   [Link](https://github.com/M0n4GPT/MLOps-project-demo/tree/main/ModelTraining)    |
 | Shruti Karmarkar|                 |                                    |
 | Varijaksh Katti |                 |                                    |
@@ -70,39 +70,62 @@ _1\. User Interaction (Frontend)_
     *   Users upload or select a photo 
     *   Display of stylized images 
     *   Interactive quiz (Guess the Artist) 
-    *   Feedback collection 
+    *   Feedback collection via touchscreen kiosks
  
 _2\. Backend Processing & AI Models_
 * **Data Pipeline (Preprocessing & Storage)**
-    *   Image Upload Handling (Cloud Storage)
-    *   Object Detection Model (Detects subject in image)
-    *   Artist-Style Mapping
+    *   **Kafka Stream** (500 msg/sec throughput)
+    *   **Spark Structured Streaming** (exactly-once processing)
+    *   **Delta Lake** (30-day versioning)
+    *   **Expectations** (~95% schema compliance)
 * **Machine Learning Models**
-    *   **Style Transfer Model** (Applies the artist’s style based on detected subject)
-    *   **Artist Classification Model** (Predicts which artist matches the style)
-    *   **Explainable AI (XAI) Module** (Highlights key style features to justify classification)
- 
- * **Containers & Deployment**
+    *   **Object Detection Model** (YOLOv8)
+    *   **Style Transfer Model** (CycleGAN with FP16 quantization) Applies the artist’s style based on detected subject
+    *   **Artist Classification Model** (CLIP+VGG19 ensemble) Predicts which artist matches the style
+    *   **FP16 Quantization** (~35% model size reduction expected)
+    *   **SHAP Explainer** (Highlights key style features to justify classification)
+* **Containers & Deployment**
     *   Hosted on **Cloud (Chameleon)**
     *   Backend API (FastAPI)
     *   Models served using **TensorFlow Serving / TorchServe**
     *   Database for storing user interactions & feedback
  
-_3\. Monitoring & Continuous Learning_
-* **Feedback Loop for Model Retraining**
-    *   Logs user guesses and correctness
-    *   If misclassifications increase, triggers retraining
-    *   Stores new labeled data for future fine-tuning
+_3\. Model serving & Monitoring_
+* **FastAPI Endpoint**
+    *   Input validation (ML Test Score Data 1)
+    *   Sequential processing pipeline
+    *   P99 Latency: <200ms (online inference)
+* **Performance Optimization**
+    *   Redis Caching for common style transformations (~85% expected hit rate)
+    *   Kubernetes HPA (2-10 pod scaling)
+    *   FP16 Quantization (35% model size reduction) 
+* **Monitoring & Evaluation**
+    *   MLFlow for experiment tracking
+    *   Prometheus for metrics collection
+    *   Grafana for visualization dashboards
+    *   Locust for load testing (500 concurrent users)
+    *   Istio Canary Deployments
+
+_4\. Continuous X Pipeline_ 
+*  **CI/CD**
+    *   GitHub Actions for automated workflows
+    *   Unit Tests
+*  **Infrastructure Management**
+    *   Terraform for infrastructure-as-code
+    *   Kubernetes Deployment for container orchestration
+*  **Automated Retraining**
+    *   Accuracy-based triggers 
  
-_4\. Hardware Components_
+_5\. Hardware Components & Infrastructure_ 
 * **On-Site Hardware (Museum Kiosk Setup)**
     *   Touchscreen kiosks for museum visitors
-    *   High-performance GPU server for real-time inference (if processing is done on-premise)
-*  **Cloud Infrastructure (If Hosted Remotely)**
-    *   Cloud-based **storage, computing, and model hosting**
-    *   Edge computing for **faster inference at museum locations**
+    *   High-performance GPU server for real-time inference (if processing is done on-premise with permission)
+    *   Edge computing capabilities for faster inference at museum locations
+*  **Chameleon Cloud**
+    *   1TB S3 Storage
+    *   Kubernetes Cluster
+    *   50GB Redis Cluster
     
-
 
 ### Summary of outside materials
 
@@ -250,11 +273,11 @@ return StreamingResponse(output, media_type="image/jpeg")
 - Concurrency: 500 simultaneous users (Kubernetes HPA)
 
 **Optimizations**:
-| Type | Technique | Impact |
+| Type | Technique | Expected Impact |
 |------|-----------|--------|
-| Model | FP16 Quantization | 35% size reduction |
-| System | Redis Caching | 85% cache hit rate |
-| System | Kubernetes HPA | 2-10 pod scaling |
+| Model | FP16 Quantization | ~35% size reduction |
+| System | Redis Caching | ~85% cache hit rate |
+| System | Kubernetes HPA | ~2-10 pod scaling |
 
 ##### Monitoring & Evaluation
 **MLFlow Tracking**:
