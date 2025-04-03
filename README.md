@@ -1,3 +1,10 @@
+<!-- 
+more focus on target users
+value:museum (business metric?)
+outside dataset -- whats inside -- scale
+Summary of infrastructure requirements
+filter model training how to satisfy the requirement
+-->
 
 ## Vision to Vintage: AI’s Take on Classical Art
 
