@@ -225,20 +225,19 @@ We will:
 
 
 
-
-
 #### Model serving and monitoring platforms
 
 ##### Core Serving Implementation
 **FastAPI Endpoint for Style Transfer**:
-'''
+
+```
 @app.post("/transform")
 async def style_transfer(image: UploadFile):
 # Input validation (ML Test Score Data 1)
 validate_image_size(image.file)
-'''
+```
 
-# Sequential processing pipeline
+###### Sequential processing pipeline
 content = yolo_model(image.file)   # Object detection
 style = style_selector(content)    # Content-aware selection
 output = cyclegan.transform(image.file, style)  # Style application
@@ -259,32 +258,32 @@ return StreamingResponse(output, media_type="image/jpeg")
 
 ##### Monitoring & Evaluation
 **MLFlow Tracking**:
-'''
+```
 with mlflow.start_run():
 mlflow.log_metric("style_transfer_latency", latency)
 mlflow.log_artifact("eval_results.json")
-'''
+```
 
 
 **Evaluation Pipeline**:
 1. **Offline Testing**:
 
-'''
+```
 test_suite = [
 ("negation_handling", test_negation_scenarios),
 ("cultural_bias", check_style_fairness)
 ]
-'''
+```
 
 2. **Load Testing**:
 
-'''
+```
 locust -f load_test.py --headless -u 500 -r 50 --host http://staging-api
-'''
+```
 
 3. **Canary Deployment**:
 
-'''
+```
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 spec:
@@ -294,13 +293,13 @@ http:
 weight: 95
 - destination: style-transfer-v2
 weight: 5
-'''
+```
 
 **Business Metrics**:
 | Metric | Target | Current |
 |--------|--------|---------|
-| Artist Recognition | 75% | 68% |
-| Engagement Time | 240s | 210s |
+| Artist Recognition | ~75% | 68% |
+| Engagement Time | ~240s | 210s |
 
 <!--
 Satisfies Unit 6:
@@ -317,7 +316,7 @@ Satisfies Unit 7:
 #### Data pipeline
 
 ##### Architecture & Implementation
-'''
+```
 Delta Lake Pipeline (Lab 5)
 (spark.readStream
 .format("kafka")
@@ -327,7 +326,7 @@ Delta Lake Pipeline (Lab 5)
 .format("delta")
 .trigger(processingTime="1m")
 .toTable("visitor_interactions"))
-'''
+```
 
 **Key Components**:
 1. **Persistent Storage**: 1TB S3 bucket (Chameleon Lab 8)
@@ -349,7 +348,7 @@ Satisfies Unit 8:
 #### Continuous X (Unit 3)
 
 ##### CI/CD Pipeline
-'''
+```
 name: ML Pipeline
 on: [push]
 jobs:
@@ -365,25 +364,25 @@ runs-on: ubuntu-latest
 steps:
 - name: Deploy to Staging
 run: kubectl apply -f k8s/staging/
-'''
+```
 
 **Core Features**:
 - **Terraform Infrastructure**:
-'''
+```
 resource "kubernetes_deployment" "style_transfer" {
 metadata { name = "style-transfer" }
 spec { replicas = 3 }
 }
-'''
+```
 
 - **Prometheus Alerts**: P99 latency >250ms triggers rollback
 - **Daily Builds**: 12min average pipeline runtime
 
 **Automated Retraining**:
-'''
+```
 if accuracy < 0.6:
 trigger_retraining(feedback_data)
-'''
+```
 
 <!--
 Satisfies Unit 3:
