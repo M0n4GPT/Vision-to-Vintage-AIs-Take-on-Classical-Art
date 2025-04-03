@@ -1,4 +1,3 @@
-# MLOps-project-demo
 
 ## Vision to Vintage: AI’s Take on Classical Art
 
