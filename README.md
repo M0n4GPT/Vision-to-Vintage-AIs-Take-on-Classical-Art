@@ -49,83 +49,20 @@ This system modernizes **art appreciation through AI**, making it interactive, e
 | All team members|Project idea, value proposition, ML problem setup (data, target variable), approach for each part, overall integration | N/A |
 | Aryaman Dev     |Model serving and monitoring                 |                                    |
 | Mona Mei        |Model training   |   [Link](https://github.com/M0n4GPT/MLOps-project-demo/tree/main/ModelTraining)    |
-| Shruti Karmarkar|                 |                                    |
-| Varijaksh Katti |                 |                                    |
+| Shruti Karmarkar| Data Pipelining             |                                    |
+| Varijaksh Katti | Continuous X              |                                    |
 
 
 
 ### System diagram
 
-<!-- Overall digram of system. Doesn't need polish, does need to show all the pieces. 
-Must include: all the hardware, all the containers/software platforms, all the models, 
-all the data. -->
-_1\. User Interaction (Frontend)_
-* **Web Interface**
-    *   Users upload or select a photo 
-    *   Display of stylized images 
-    *   Interactive quiz (Guess the Artist) 
-    *   Feedback collection via touchscreen kiosks
- 
-_2\. Backend Processing & AI Models_
-* **Data Pipeline (Preprocessing & Storage)**
-    *   **Kafka Stream** (500 msg/sec throughput)
-    *   **Spark Structured Streaming** (exactly-once processing)
-    *   **Delta Lake** (30-day versioning)
-    *   **Expectations** (~95% schema compliance)
-* **Machine Learning Models**
-    *   **Object Detection Model** (YOLOv8)
-    *   **Style Transfer Model** (CycleGAN with FP16 quantization) Applies the artist’s style based on detected subject
-    *   **Artist Classification Model** (CLIP+VGG19 ensemble) Predicts which artist matches the style
-    *   **FP16 Quantization** (~35% model size reduction expected)
-    *   **SHAP Explainer** (Highlights key style features to justify classification)
-* **Containers & Deployment**
-    *   Hosted on **Cloud (Chameleon)**
-    *   Backend API (FastAPI)
-    *   Models served using **TensorFlow Serving / TorchServe**
-    *   Database for storing user interactions & feedback
- 
-_3\. Model serving & Monitoring_
-* **FastAPI Endpoint**
-    *   Input validation (ML Test Score Data 1)
-    *   Sequential processing pipeline
-    *   P99 Latency: <200ms (online inference)
-* **Performance Optimization**
-    *   Redis Caching for common style transformations (~85% expected hit rate)
-    *   Kubernetes HPA (2-10 pod scaling)
-    *   FP16 Quantization (35% model size reduction) 
-* **Monitoring & Evaluation**
-    *   MLFlow for experiment tracking
-    *   Prometheus for metrics collection
-    *   Grafana for visualization dashboards
-    *   Locust for load testing (500 concurrent users)
-    *   Istio Canary Deployments
+![image](https://github.com/user-attachments/assets/da07032b-6d82-4b82-ac88-3cc2268867d1)
 
-_4\. Continuous X Pipeline_ 
-*  **CI/CD**
-    *   GitHub Actions for automated workflows
-    *   Unit Tests
-*  **Infrastructure Management**
-    *   Terraform for infrastructure-as-code
-    *   Kubernetes Deployment for container orchestration
-*  **Automated Retraining**
-    *   Accuracy-based triggers 
- 
-_5\. Hardware Components & Infrastructure_ 
-* **On-Site Hardware (Museum Kiosk Setup)**
-    *   Touchscreen kiosks for museum visitors
-    *   High-performance GPU server for real-time inference (if processing is done on-premise with permission)
-    *   Edge computing capabilities for faster inference at museum locations
-*  **Chameleon Cloud**
-    *   1TB S3 Storage
-    *   Kubernetes Cluster
-    *   50GB Redis Cluster
     
 
 ### Summary of outside materials
 
-<!-- In a table, a row for each dataset, foundation model. 
-Name of data/model, conditions under which it was created (ideally with links/references), 
-conditions under which it may be used. -->
+
 Here’s a structured table for summarizing the outside materials used in our project:
 
 |              | How it was created | Conditions of use |
@@ -139,10 +76,6 @@ Here’s a structured table for summarizing the outside materials used in our pr
 
 
 ### Summary of infrastructure requirements
-
-<!-- Itemize all your anticipated requirements: What (`m1.medium` VM, `gpu_mi100`), 
-how much/when, justification. Include compute, floating IPs, persistent storage. 
-The table below shows an example, it is not a recommendation. -->
 
 Here’s a table summarizing the anticipated **infrastructure requirements** for our project:
 
