@@ -6,7 +6,8 @@ Our serving architecture implements a sequential processing pipeline that transf
 
 ## Model Serving Pipeline
 ```
-"mermaid"
+mermaid
+
 graph TD
     A[Visitor Upload] --> B[FastAPI Endpoint]
     B --> C[Object Detection - YOLOv8]
