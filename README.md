@@ -50,7 +50,7 @@ This system modernizes **art appreciation through AI**, making it interactive, e
 | Aryaman Dev     |Model serving and monitoring                 |                                    |
 | Mona Mei        |Model training   |   [Link](https://github.com/M0n4GPT/MLOps-project-demo/tree/main/ModelTraining)    |
 | Shruti Karmarkar| Data Pipelining             |   [Link](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining)                                  |
-| Varijaksh Katti | Continuous X              |   [Link](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/commit/9a3ecc5274964e2ada866c912abc68b3157444d7)                               |
+| Varijaksh Katti | Continuous X              |   [Link](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Continuous%20X)                               |
 
 
 
