@@ -132,10 +132,13 @@ Here’s a structured table for summarizing the outside materials used in our pr
 |--------------|--------------------|-------------------|
 |**CIFAR-10 / CIFAR-100** |Created by the **Canadian Institute for Advanced Research**, containing labeled images for object detection and classification. [Link](https://www.cs.toronto.edu/~kriz/cifar.html)|      Open-source under the **MIT License**; freely usable for research and educational purposes. |
 |**Metropolitan Museum Open Access Collection** |High-resolution public domain images of artworks from The Met’s collection. [Link](https://www.metmuseum.org/about-the-met/policies-and-documents/open-access)| **Creative Commons Zero (CC0)**—can be freely used, modified, and distributed.|
-|**WikiArt Dataset**| Large dataset of artwork images with metadata, scraped from WikiArt. [Link](https://github.com/cs-chan/ArtGAN) | Publicly available, but usage requires compliance with **WikiArt's terms**. |
+|**WikiArt Dataset**| Large dataset of artwork images with metadata, scraped from WikiArt. [GitHub](https://github.com/cs-chan/ArtGAN),  [kaggle](https://www.kaggle.com/datasets/antoinegruson/-wikiart-all-images-120k-link/data)| Publicly available, but usage requires compliance with **WikiArt's terms**. |
+| **Best Artworks of All Time Dataset**   |Collection of paintings of the 50 most influential artists of all time. [Link](https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time)|Licensed under CC BY-NC-SA 4.0, allowing non-commercial use with attribution. |
 | **COCO Dataset**   |Large-scale object detection dataset for training image recognition models. [Link](https://cocodataset.org/)|Freely available for **non-commercial research and educational use**. |
 |**VGG-19 Model**|Pre-trained convolutional neural network (CNN) used for style transfer. [Link](https://pytorch.org/vision/stable/models.html)|Open-source under **MIT License**, can be used for academic research.|
 |**CLIP (Contrastive Language–Image Pretraining)**|Foundation model by OpenAI that connects images and text for classification. [Link](https://openai.com/research/clip)|Open-source for **non-commercial research**; commercial usage requires permission.|
+|**Neural Style Transfer**|Open-source implementation of Neural Style Transfer using a GAN using the technique outlined in [A Neural Algorithm of Artistic Style](https://arxiv.org/abs/1508.06576). [Link](https://github.com/NikSchaefer/neural-style-transfer)|Open-source under **MIT License**, can be used for academic research.|
+|**STGAN**|Open-source implementation of Neural artistic traslator using novel cGAN architechure. [Link](https://github.com/nipdep/STGAN)|Open-source under **MIT License**, can be used for academic research.|
 
 
 ### Summary of infrastructure requirements
