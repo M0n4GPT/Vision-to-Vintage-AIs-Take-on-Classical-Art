@@ -106,24 +106,31 @@ and which optional "difficulty" points you are attempting. -->
 
 
 
-##### Training Strategy
-Our model training pipeline is designed for scalability and efficiency. Given that our project focuses on art style transfer and artist classification, we will use:
+##### Training Strategy (Unit 4)
+Our model training pipeline is designed for scalability and efficiency. Given that our project focuses on art style transfer and artist classification, to satisfy the requirements, we will:
 
-- **Distributed Data Parallel (DDP)** for efficient multi-GPU training, ensuring faster convergence for high-resolution style transfer models.
-- **Fully Sharded Data Parallel (FSDP)** to enable large model training by sharding model parameters across GPUs, crucial for handling complex artistic transformations.
-- **Optimized batch sizing** to balance memory constraints and computational efficiency, considering the high pixel resolution of artistic datasets.
+- **Train and re-train**: We will train both a style transfer model and an artist classification model from scratch, and re-train them periodically using new user-submitted artwork. This ensures adaptability to evolving data in production environments.
+- **Modeling**: We use a CNN-based architecture (VGG-19) for style transfer and the CLIP (Contrastive Language–Image Pretraining) model for artist classification, justified through performance comparisons and experiment analysis.
 
-We will conduct experiments comparing training time and performance using:
-- Single-GPU vs. Multi-GPU training (with DDP and FSDP) to evaluate the impact on style transfer efficiency.
-- Effect of batch size variations on convergence speed and model accuracy, specifically for artist classification tasks. We will experiment with batch sizes ranging **from 8 to 64**, measuring the impact on training time and model performance (accuracy and convergence speed).
+To support large model training (extra “difficulty points”):
+- We will use **Distributed Data Parallel (DDP)** for efficient multi-GPU training, reducing time to convergence.
+- We will use **Fully Sharded Data Parallel (FSDP)** to enable training of larger models by sharding model parameters across devices.
+- We will experiment with **batch sizes ranging from 8 to 64** to explore their impact on model convergence and GPU memory efficiency. And try to find an efficient training strategy to fit on a low-end GPU.
 
-##### Experiment Tracking
-To log and analyze training experiments, we will host an **MLFlow tracking server** on Chameleon. Our logging will include:
+Experiments metrics will include:
+- Comparing single-GPU vs. multi-GPU (DDP and FSDP) training performance.
+- Measuring training time, accuracy, and convergence speed under different batch sizes and training strategies.
+- Plotting training time vs. number of GPUs to illustrate scalability.
 
-- Model parameters (architecture, hyperparameters, and optimizer) relevant for optimizing artistic style transformations and classification.
-- Training metrics such as **content loss, style loss, and classification accuracy** to assess both the effectiveness of style transfer and model precision in identifying artists.
-- Comparative results from different training strategies and style transfer configurations.
-- Registered models for version control and reusability, allowing for continuous improvement based on user feedback from our interactive platform.
+##### Model training infrastructure and platform (Unit 5)
+
+**Experiment Tracking**: To log and analyze training experiments, we will host an **MLFlow tracking server** on Chameleon. Our system will:
+
+- Log model parameters, optimizer settings, and architectural choices for both models.
+- Track metrics such as **content loss**, **style loss**, and **classification accuracy** for experiment comparison.
+- Record results from different training strategies (DDP vs. FSDP, batch sizes) to identify optimal configurations.
+- Register and version models, enabling reproducible training and easy retraining based on production data.
+
 
 <!--We will:
 - **Start and configure the MLFlow tracking server**.
@@ -136,13 +143,16 @@ To log and analyze training experiments, we will host an **MLFlow tracking serve
 This allows us to retrain models effectively based on new artistic datasets and evolving user preferences.
 -->
 
-##### Training Job Scheduling
-We will deploy a **Ray cluster** to schedule and distribute training jobs across multiple GPUs. The Ray cluster will be configured with at least **2 GPUs** (NVIDIA V100 or A100), ensuring enough parallel computation for large-scale model training.
+**Training Job Scheduling**: We will deploy a **Ray cluster** on Chameleon to schedule and execute training jobs. Key functionalities include:
 
-- **Parallelized execution of multiple training experiments**, such as training different style transfer models concurrently.
-- **Dynamic resource allocation** to optimize GPU utilization, ensuring efficient processing of various artistic styles.
-- **Checkpointing and fault tolerance** using Ray Train, critical for long-running style adaptation tasks.
-- **Ray Train with multiple workers and fractional GPUs**, allowing multiple style transformations to be fine-tuned simultaneously.
+- Submitting and managing **parallel training jobs** across multiple GPUs (e.g., NVIDIA V100 or A100).
+- Dynamically scaling resources for efficient GPU utilization.
+- Running long-duration training jobs with **fault tolerance and checkpointing** using **Ray Train**.
+
+We will configure Ray Train with (extra “difficulty points”):
+- **FailureConfig** for resilience against node failure.
+- **Remote checkpointing** to persistent storage.
+- Multiple workers and fractional GPU usage to parallelize style transfer fine-tuning.
 
 <!--We will:
 - **Start and configure the Ray cluster on NVIDIA GPUs**.
@@ -153,8 +163,7 @@ We will deploy a **Ray cluster** to schedule and distribute training jobs across
 - **Stop the Ray system when needed**.
 -->
 
-##### Hyperparameter Tuning
-For hyperparameter optimization, we will use **Ray Tune**, which allows:
+We will schedule **Hyperparameter Tuning** jobs (extra “difficulty points”) using **Ray Tune**, which allows:
 
 - **Automated tuning** with advanced algorithms (e.g., Bayesian optimization, ASHA) to refine **style transfer parameters**.
 - **Efficient resource allocation** to test different hyperparameter sets concurrently, such as finding the optimal style weight for preserving both artistic details and content structure.
