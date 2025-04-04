@@ -8,16 +8,6 @@ filter model training how to satisfy the requirement
 
 ## Vision to Vintage: AI’s Take on Classical Art
 
-<!-- 
-Discuss: Value proposition: Your will propose a machine learning system that can be 
-used in an existing business or service. (You should not propose a system in which 
-a new business or service would be developed around the machine learning system.) 
-Describe the value proposition for the machine learning system. What’s the (non-ML) 
-status quo used in the business or service? What business metric are you going to be 
-judged on? (Note that the “service” does not have to be for general users; you can 
-propose a system for a science problem, for example.)
--->
-
 ### Discuss: Value proposition:
 
 _Current Status Quo_
@@ -38,6 +28,10 @@ _Business Value_
 *   **Educational & Gamified Experience** – Visitors actively learn about artists through play. 
 *   **Data-Driven Insights** – Visitor interactions inform exhibit improvements and preferences.
 *   **Potential Monetization** – AI-generated artworks can be sold as prints or digital souvenirs.
+
+_Target Users & Profitability Strategy_
+
+Our primary target users are young adult visitors (ages 18–30), including college students, digital-native tourists, and casual museum-goers who seek interactive, tech-driven experiences. This demographic is highly engaged on social media and motivated by shareable, gamified content. By offering personalized AI-generated art transformations and a challenge-based interaction, we turn passive viewers into active participants. These users are also more likely to purchase stylized digital prints or NFT-style collectibles of their transformed photos—providing a clear monetization path. Additionally, the museum gains valuable user analytics on engagement trends, helping to optimize future exhibits. This system not only enhances educational value but also opens a revenue stream through digital merchandise, driving long-term profitability and deeper brand engagement for The Met.
  
 _Effectiveness & Model Monitoring_
  
@@ -49,12 +43,6 @@ This system modernizes **art appreciation through AI**, making it interactive, e
 
 
 ### Contributors
-
-<!-- Table of contributors and their roles. 
-First row: define responsibilities that are shared by the team. 
-Then, each row after that is: name of contributor, their role, and in the third column, 
-you will link to their contributions. If your project involves multiple repos, you will 
-link to their contributions in all repos here. -->
 
 | Name                            | Responsible for | Link to their commits in this repo |
 |---------------------------------|-----------------|------------------------------------|
