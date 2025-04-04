@@ -49,103 +49,33 @@ This system modernizes **art appreciation through AI**, making it interactive, e
 | All team members|Project idea, value proposition, ML problem setup (data, target variable), approach for each part, overall integration | N/A |
 | Aryaman Dev     |Model serving and monitoring                 |                                    |
 | Mona Mei        |Model training   |   [Link](https://github.com/M0n4GPT/MLOps-project-demo/tree/main/ModelTraining)    |
-| Shruti Karmarkar|                 |                                    |
-| Varijaksh Katti |                 |                                    |
+| Shruti Karmarkar| Data Pipelining             |   [Link](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining)                                  |
+| Varijaksh Katti | Continuous X              |                                    |
 
 
 
 ### System diagram
 
-<!-- Overall digram of system. Doesn't need polish, does need to show all the pieces. 
-Must include: all the hardware, all the containers/software platforms, all the models, 
-all the data. -->
-_1\. User Interaction (Frontend)_
-* **Web Interface**
-    *   Users upload or select a photo 
-    *   Display of stylized images 
-    *   Interactive quiz (Guess the Artist) 
-    *   Feedback collection via touchscreen kiosks
- 
-_2\. Backend Processing & AI Models_
-* **Data Pipeline (Preprocessing & Storage)**
-    *   **Kafka Stream** (500 msg/sec throughput)
-    *   **Spark Structured Streaming** (exactly-once processing)
-    *   **Delta Lake** (30-day versioning)
-    *   **Expectations** (~95% schema compliance)
-* **Machine Learning Models**
-    *   **Object Detection Model** (YOLOv8)
-    *   **Style Transfer Model** (CycleGAN with FP16 quantization) Applies the artist’s style based on detected subject
-    *   **Artist Classification Model** (CLIP+VGG19 ensemble) Predicts which artist matches the style
-    *   **FP16 Quantization** (~35% model size reduction expected)
-    *   **SHAP Explainer** (Highlights key style features to justify classification)
-* **Containers & Deployment**
-    *   Hosted on **Cloud (Chameleon)**
-    *   Backend API (FastAPI)
-    *   Models served using **TensorFlow Serving / TorchServe**
-    *   Database for storing user interactions & feedback
- 
-_3\. Model serving & Monitoring_
-* **FastAPI Endpoint**
-    *   Input validation (ML Test Score Data 1)
-    *   Sequential processing pipeline
-    *   P99 Latency: <200ms (online inference)
-* **Performance Optimization**
-    *   Redis Caching for common style transformations (~85% expected hit rate)
-    *   Kubernetes HPA (2-10 pod scaling)
-    *   FP16 Quantization (35% model size reduction) 
-* **Monitoring & Evaluation**
-    *   MLFlow for experiment tracking
-    *   Prometheus for metrics collection
-    *   Grafana for visualization dashboards
-    *   Locust for load testing (500 concurrent users)
-    *   Istio Canary Deployments
+![image](https://github.com/user-attachments/assets/da07032b-6d82-4b82-ac88-3cc2268867d1)
 
-_4\. Continuous X Pipeline_ 
-*  **CI/CD**
-    *   GitHub Actions for automated workflows
-    *   Unit Tests
-*  **Infrastructure Management**
-    *   Terraform for infrastructure-as-code
-    *   Kubernetes Deployment for container orchestration
-*  **Automated Retraining**
-    *   Accuracy-based triggers 
- 
-_5\. Hardware Components & Infrastructure_ 
-* **On-Site Hardware (Museum Kiosk Setup)**
-    *   Touchscreen kiosks for museum visitors
-    *   High-performance GPU server for real-time inference (if processing is done on-premise with permission)
-    *   Edge computing capabilities for faster inference at museum locations
-*  **Chameleon Cloud**
-    *   1TB S3 Storage
-    *   Kubernetes Cluster
-    *   50GB Redis Cluster
     
 
 ### Summary of outside materials
 
-<!-- In a table, a row for each dataset, foundation model. 
-Name of data/model, conditions under which it was created (ideally with links/references), 
-conditions under which it may be used. -->
+
 Here’s a structured table for summarizing the outside materials used in our project:
 
 |              | How it was created | Conditions of use |
 |--------------|--------------------|-------------------|
-|**CIFAR-10 / CIFAR-100** |Created by the **Canadian Institute for Advanced Research**, containing labeled images for object detection and classification. [Link](https://www.cs.toronto.edu/~kriz/cifar.html)|      Open-source under the **MIT License**; freely usable for research and educational purposes. |
-|**Metropolitan Museum Open Access Collection** |High-resolution public domain images of artworks from The Met’s collection. [Link](https://www.metmuseum.org/about-the-met/policies-and-documents/open-access)| **Creative Commons Zero (CC0)**—can be freely used, modified, and distributed.|
-|**WikiArt Dataset**| Large dataset of artwork images with metadata, scraped from WikiArt. [GitHub](https://github.com/cs-chan/ArtGAN),  [kaggle](https://www.kaggle.com/datasets/antoinegruson/-wikiart-all-images-120k-link/data)| Publicly available, but usage requires compliance with **WikiArt's terms**. |
-| **Best Artworks of All Time Dataset**   |Collection of paintings of the 50 most influential artists of all time. [Link](https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time)|Licensed under CC BY-NC-SA 4.0, allowing non-commercial use with attribution. |
-| **COCO Dataset**   |Large-scale object detection dataset for training image recognition models. [Link](https://cocodataset.org/)|Freely available for **non-commercial research and educational use**. |
+|**Best Artworks of All Time** |Large-scale dataset of artworks with metadata across 1,000+ artists.[Link](https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time)|      Public Kaggle dataset – for non-commercial, research, and educational use. |
+|**WikiArt Full Collection (120K)** |High-resolution public domain images of artworks from The Met’s collection. [Link](https://www.kaggle.com/datasets/antoinegruson/-wikiart-all-images-120k-link/data)| Public Kaggle dataset – educational use; some artworks may be under copyright.|
+|**Style-Transfer-GAN Repo**| GitHub implementation of GAN-based style transfer for artistic image generation.  [Link](https://github.com/temilaj/Style-Transfer-GAN) |MIT License – free for research and commercial use with attribution.|
 |**VGG-19 Model**|Pre-trained convolutional neural network (CNN) used for style transfer. [Link](https://pytorch.org/vision/stable/models.html)|Open-source under **MIT License**, can be used for academic research.|
 |**CLIP (Contrastive Language–Image Pretraining)**|Foundation model by OpenAI that connects images and text for classification. [Link](https://openai.com/research/clip)|Open-source for **non-commercial research**; commercial usage requires permission.|
-|**Neural Style Transfer**|Open-source implementation of Neural Style Transfer using a GAN using the technique outlined in [A Neural Algorithm of Artistic Style](https://arxiv.org/abs/1508.06576). [Link](https://github.com/NikSchaefer/neural-style-transfer)|Open-source under **MIT License**, can be used for academic research.|
-|**STGAN**|Open-source implementation of Neural artistic traslator using novel cGAN architechure. [Link](https://github.com/nipdep/STGAN)|Open-source under **MIT License**, can be used for academic research.|
-
+|**Neural Style Transfer (NST)** |PyTorch-based repo for classic neural style transfer techniques. [Link](https://github.com/NikSchaefer/neural-style-transfer?tab=MIT-1-ov-file)| MIT License – open-source, can be freely used and modified.|
+|**STGAN (Style Transfer GAN)** |Advanced GAN-based model for unpaired artistic style transfer. [Link](https://github.com/nipdep/STGAN)|Research-oriented GitHub repo – usage under open-source license with attribution.|
 
 ### Summary of infrastructure requirements
-
-<!-- Itemize all your anticipated requirements: What (`m1.medium` VM, `gpu_mi100`), 
-how much/when, justification. Include compute, floating IPs, persistent storage. 
-The table below shows an example, it is not a recommendation. -->
 
 Here’s a table summarizing the anticipated **infrastructure requirements** for our project:
 
