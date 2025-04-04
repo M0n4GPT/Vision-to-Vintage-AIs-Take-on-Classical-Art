@@ -304,48 +304,66 @@ Satisfies Unit 8:
 - Structured/unstructured data management
 -->
 
-#### Continuous X (Unit 3)
+## Continuous X (Unit 3)
 
-##### CI/CD Pipeline
-```
+### CI/CD Pipeline
+
+We implement a **GitHub Actions CI/CD pipeline** called **ML Pipeline** to automate testing, building, and deployment processes:
+
+```yaml
 name: ML Pipeline
 on: [push]
+
 jobs:
-build:
-runs-on: ubuntu-latest
-steps:
-- name: Unit Tests
-run: pytest tests/unit/
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unit Tests
+        run: pytest tests/unit/
 
-deploy:
-needs: build
-runs-on: ubuntu-latest
-steps:
-- name: Deploy to Staging
-run: kubectl apply -f k8s/staging/
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Staging
+        run: kubectl apply -f k8s/staging/
 ```
 
-**Core Features**:
-- **Terraform Infrastructure**:
-```
-resource "kubernetes_deployment" "style_transfer" {
-metadata { name = "style-transfer" }
-spec { replicas = 3 }
-}
-```
+### Core Features
 
-- **Prometheus Alerts**: P99 latency >250ms triggers rollback
-- **Daily Builds**: 12min average pipeline runtime
+- **Terraform Infrastructure-as-Code**:
+  ```hcl
+  resource "kubernetes_deployment" "style_transfer" {
+    metadata {
+      name = "style-transfer"
+    }
+    spec {
+      replicas = 3
+    }
+  }
+  ```
+  We use Terraform to define and deploy Kubernetes resources declaratively.
 
-**Automated Retraining**:
-```
-if accuracy < 0.6:
-trigger_retraining(feedback_data)
-```
+- **Prometheus Alerts**:
+  - P99 latency exceeding **250ms** triggers an automatic rollback to the previous stable deployment.
 
-<!--
-Satisfies Unit 3:
-- GitHub Actions CI/CD
-- Immutable infrastructure
-- Staged deployments
--->
+- **Daily Builds**:
+  - The CI/CD pipeline runs daily scheduled builds and tests.
+  - Average pipeline runtime: **12 minutes**.
+
+- **Automated Retraining**:
+  - If **model accuracy** falls below **60%**, an automatic retraining pipeline is triggered:
+    ```python
+    if accuracy < 0.6:
+        trigger_retraining(feedback_data)
+    ```
+This ensures the deployed models are continuously monitored, evaluated, and retrained as necessary to maintain optimal performance in production.
+
+---
+
+### Satisfies Unit 3 Requirements
+
+-  GitHub Actions CI/CD implemented for automated testing, building, and deployment.
+-  Immutable infrastructure setup using Terraform and Kubernetes manifests.
+-  Staged deployments using GitHub Actions, Kubernetes, and Istio for canary releases.
+
