@@ -5,19 +5,19 @@ This module implements a robust serving and monitoring infrastructure for the "V
 Our serving architecture implements a sequential processing pipeline that transforms visitor photos into artistic styles while monitoring performance metrics and user engagement.
 
 ## Model Serving Pipeline
-```
-mermaid
+```mermaid
+graph TD;
+    A[Visitor Upload] -->|Image Input| B[FastAPI Endpoint];
+    B -->|Preprocessing| C[Object Detection - YOLOv8];
+    C -->|Detected Subjects| D[Style Transfer - CycleGAN];
+    D -->|Stylized Image| E[Artist Classification - CLIP+VGG19];
+    E -->|Predicted Artist| F[Response to User];
 
-graph TD
-    A[Visitor Upload] --> B[FastAPI Endpoint]
-    B --> C[Object Detection - YOLOv8]
-    C --> D[Style Transfer - CycleGAN]
-    D --> E[Artist Classification - CLIP+VGG19]
-    E --> F[Response]
-    
-    G[(Redis Cache)] <--> C
-    G <--> D
-    G <--> E
+    subgraph Caching Layer
+        G[(Redis Cache)] <--> C;
+        G <--> D;
+        G <--> E;
+    end
 ```
 
 ## Core Implementation 
