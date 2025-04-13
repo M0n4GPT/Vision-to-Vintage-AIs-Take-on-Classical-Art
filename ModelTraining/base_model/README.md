@@ -12,4 +12,5 @@ As part of the Model Training's responsibility, this base model serves as the fo
  **Colab Notebook**  
 Click below to open and run the notebook directly in Google Colab:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/main/ModelTraining/base_model/style_transfer_base_model.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/main/ModelTraining/base_model/style_transfer_base_model.ipynb)
+
