@@ -1,27 +1,51 @@
 // main.js
 
 $(document).ready(function () {
-    // Initial setup: hide all interactive elements
+    // Initial setup: hide interactive elements
     $('.image-section').hide();
     $('.loader').hide();
     $('#result').hide();
     $('#btn-retry').hide();
 
-    // Function to preview uploaded image
+    // Delegate click on dynamically generated artist-choice buttons
+    $('#result').on('click', '.author-choice', function () {
+        const $btn = $(this);
+        const guessed = $btn.data('author');
+        const actual = $('#actual-author').data('author');
+
+        // Disable all choice buttons after a guess
+        $('.author-choice').prop('disabled', true);
+
+        // Highlight the clicked button: green if correct, red if wrong
+        if (guessed === actual) {
+            $btn.removeClass('btn-outline-primary')
+                .addClass('btn-success');
+            $('#guess-feedback').html('<span class="text-success">Correct!</span>');
+        } else {
+            $btn.removeClass('btn-outline-primary')
+                .addClass('btn-danger');
+            const actualText = actual.replace(/_/g, ' ');
+            $('#guess-feedback').html(
+                `<span class="text-danger">Nope—it was ${actualText}.</span>`
+            );
+        }
+    });
+
+    // Function to preview the uploaded image
     function readURL(input) {
         if (input.files && input.files[0]) {
-            var reader = new FileReader();
+            const reader = new FileReader();
             reader.onload = function (e) {
                 $('#imagePreview')
-                  .attr('src', e.target.result)  // Set <img> src to data URL
-                  .hide()
-                  .fadeIn(650);
+                    .attr('src', e.target.result)   // Set <img> src to the uploaded file
+                    .hide()
+                    .fadeIn(650);
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    // When a file is selected, show preview and predict button
+    // When a file is selected, show preview and the "Stylize!" button
     $('#imageUpload').change(function () {
         $('.image-section').show();
         $('#btn-predict').show();
@@ -32,13 +56,13 @@ $(document).ready(function () {
 
     // Handle click on "Stylize!" button
     $('#btn-predict').click(function () {
-        var form_data = new FormData($('#upload-file')[0]);
+        const form_data = new FormData($('#upload-file')[0]);
 
-        // Hide predict button and show loader spinner
+        // Hide the predict button and show the loader spinner
         $(this).hide();
         $('.loader').show();
 
-        // Send the image to server for style transfer
+        // Send the image to the server for style transfer
         $.ajax({
             type: 'POST',
             url: '/',
@@ -47,32 +71,32 @@ $(document).ready(function () {
             cache: false,
             processData: false,
             success: function (data) {
-                // Hide loader, display result HTML, show retry button
+                // Hide loader, insert result HTML, then show retry button
                 $('.loader').hide();
                 $('#result').html(data).fadeIn(600);
                 $('#btn-retry').show();
             },
             error: function (xhr) {
-                // Hide loader and display error message
+                // On error, hide loader and display error message
                 $('.loader').hide();
                 $('#result')
-                  .html('<p class="text-danger">Error: ' + xhr.responseText + '</p>')
-                  .fadeIn(600);
+                    .html(`<p class="text-danger">Error: ${xhr.responseText}</p>`)
+                    .fadeIn(600);
             }
         });
     });
 
     // Handle click on "Try Another Image" button
     $('#btn-retry').click(function () {
-        // Reset the upload form
+        // Reset upload form
         $('#upload-file')[0].reset();
-        // Clear preview image
+        // Clear the preview image
         $('#imagePreview').attr('src', '').hide();
-        // Hide all sections and buttons
+        // Hide all interactive sections and buttons
         $('.image-section').hide();
         $('#btn-predict').hide();
         $('#result').hide().empty();
-        // Hide retry button itself
+        // Hide the retry button itself
         $(this).hide();
     });
 });
