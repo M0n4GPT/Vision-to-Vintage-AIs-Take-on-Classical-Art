@@ -62,7 +62,7 @@ def index():
         return render_template("index.html")
 
     # file upload error message
-    file = request.files.get("content")
+    file = request.files.get("file")
     if not file:
         return "No file uploaded", 400
 
@@ -97,13 +97,15 @@ def index():
     # parse for display
     title, author = parse_style_name(style_path)
     style_label   = f"{title} by {author},"
+    img_url       = f"/uploads/{out_filename}"
 
-    return render_template(
-        "result.html",
-        stylized_url = f"/uploads/{out_filename}",
-        style_label  = style_label,
-        elapsed      = f"{elapsed:.2f}"
-    )
+    html = f'''
+    <p><strong>Style:</strong> {style_label}</p>
+    <p><strong>Elapsed:</strong> {elapsed:.2f}s</p>
+    <img src="{img_url}" alt="Stylized image" class="img-preview" style="margin-top:1rem;">
+    '''
+
+    return html
 
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
