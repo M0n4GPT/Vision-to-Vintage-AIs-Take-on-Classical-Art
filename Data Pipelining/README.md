@@ -13,23 +13,16 @@ I created a ZIP file containing the Training, Validation, Evaluation, and a new 
 Each artist's images have been properly split into training, validation, and evaluation sets based on a 70-20-10 percentage split.
 
 The folder structure inside the ZIP looks like:
-<pre> ```bash artwork_dataset.zip │ ├── training/ │ ├── vincent_van_gogh/ │ ├── edgar_degas/ │ ├── claude_monet/ │ ├── pablo_picasso/ │ ├── jackson_pollock/ │ ├── titian/ │ ├── gustave_courbet/ │ ├── caravaggio/ │ ├── william_turner/ │ ├── edvard_munch/ │ ├── validation/ │ ├── vincent_van_gogh/ │ ├── edgar_degas/ │ ├── claude_monet/ │ ├── pablo_picasso/ │ ├── jackson_pollock/ │ ├── titian/ │ ├── gustave_courbet/ │ ├── caravaggio/ │ ├── william_turner/ │ ├── edvard_munch/ │ ├── evaluation/ │ ├── vincent_van_gogh/ │ ├── edgar_degas/ │ ├── claude_monet/ │ ├── pablo_picasso/ │ ├── jackson_pollock/ │ ├── titian/ │ ├── gustave_courbet/ │ ├── caravaggio/ │ ├── william_turner/ │ ├── edvard_munch/ │ └── test_random/ ├── (50 random images including people, flowers, scenery, gardens, etc.) ``` </pre>
+
+![image](https://github.com/user-attachments/assets/af06d4cb-9d7e-4a95-9a91-e4a6d6d3f275)
+
 
 
 2. Training/Validation/Evaluation Splits Table
 Below is the detailed breakdown of how many images were assigned to each set for each artist:
-| Artist | Total Images | Training (70%) | Validation (20%) | Evaluation (10%) |
-|:-------|:------------:|:--------------:|:----------------:|:----------------:|
-| Vincent van Gogh | 877 | 614 | 175 | 88 |
-| Edgar Degas | 702 | 491 | 140 | 71 |
-| Claude Monet | 73 | 51 | 15 | 7 |
-| Pablo Picasso | 439 | 307 | 88 | 44 |
-| Jackson Pollock | 24 | 17 | 5 | 2 |
-| Titian | 255 | 179 | 51 | 25 |
-| Gustave Courbet | 59 | 41 | 12 | 6 |
-| Caravaggio | 55 | 39 | 11 | 5 |
-| William Turner | 66 | 46 | 13 | 7 |
-| Edvard Munch | 67 | 47 | 13 | 7 |
+
+![image](https://github.com/user-attachments/assets/370590d3-c097-46d8-b833-a752e4700616)
+
 
 
 Additionally, a new test_random/ folder was created containing 50 random test images for later use in style transformation and evaluation.
