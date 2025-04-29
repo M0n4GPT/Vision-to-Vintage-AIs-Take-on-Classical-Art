@@ -36,6 +36,7 @@ artwork_dataset.zip
 └── test_random/
     ├── (50 random images including people, flowers, scenery, gardens, etc.)
 
+
 2. Training/Validation/Evaluation Splits Table
 Below is the detailed breakdown of how many images were assigned to each set for each artist:
 | Artist | Total Images | Training (70%) | Validation (20%) | Evaluation (10%) |
