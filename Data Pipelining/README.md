@@ -13,28 +13,7 @@ I created a ZIP file containing the Training, Validation, Evaluation, and a new 
 Each artist's images have been properly split into training, validation, and evaluation sets based on a 70-20-10 percentage split.
 
 The folder structure inside the ZIP looks like:
-artwork_dataset.zip
-│
-├── training/
-│   ├── vincent_van_gogh/
-│   ├── edgar_degas/
-│   ├── claude_monet/
-│   ├── pablo_picasso/
-│   ├── jackson_pollock/
-│   ├── titian/
-│   ├── gustave_courbet/
-│   ├── caravaggio/
-│   ├── william_turner/
-│   ├── edvard_munch/
-│
-├── validation/
-│   └── (same artist folders)
-│
-├── evaluation/
-│   └── (same artist folders)
-│
-└── test_random/
-    ├── (50 random images including people, flowers, scenery, gardens, etc.)
+<pre> ```bash artwork_dataset.zip │ ├── training/ │ ├── vincent_van_gogh/ │ ├── edgar_degas/ │ ├── claude_monet/ │ ├── pablo_picasso/ │ ├── jackson_pollock/ │ ├── titian/ │ ├── gustave_courbet/ │ ├── caravaggio/ │ ├── william_turner/ │ ├── edvard_munch/ │ ├── validation/ │ ├── vincent_van_gogh/ │ ├── edgar_degas/ │ ├── claude_monet/ │ ├── pablo_picasso/ │ ├── jackson_pollock/ │ ├── titian/ │ ├── gustave_courbet/ │ ├── caravaggio/ │ ├── william_turner/ │ ├── edvard_munch/ │ ├── evaluation/ │ ├── vincent_van_gogh/ │ ├── edgar_degas/ │ ├── claude_monet/ │ ├── pablo_picasso/ │ ├── jackson_pollock/ │ ├── titian/ │ ├── gustave_courbet/ │ ├── caravaggio/ │ ├── william_turner/ │ ├── edvard_munch/ │ └── test_random/ ├── (50 random images including people, flowers, scenery, gardens, etc.) ``` </pre>
 
 
 2. Training/Validation/Evaluation Splits Table
@@ -51,6 +30,7 @@ Below is the detailed breakdown of how many images were assigned to each set for
 | Caravaggio | 55 | 39 | 11 | 5 |
 | William Turner | 66 | 46 | 13 | 7 |
 | Edvard Munch | 67 | 47 | 13 | 7 |
+
 
 Additionally, a new test_random/ folder was created containing 50 random test images for later use in style transformation and evaluation.
 
