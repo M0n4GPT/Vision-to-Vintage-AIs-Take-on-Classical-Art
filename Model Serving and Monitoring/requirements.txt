@@ -1,0 +1,56 @@
+# Core dependencies
+fastapi>=0.104.1
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+pydantic>=2.4.2
+Pillow>=10.0.0
+
+# TensorFlow and model serving
+tensorflow>=2.14.0
+tensorflow-hub>=0.14.0
+numpy>=1.25.0  # Updated for TF compatibility
+onnx>=1.14.1
+onnxruntime>=1.16.0
+tf2onnx>=1.15.0
+
+# Monitoring and metrics
+prometheus-client>=0.17.1
+scikit-image>=0.21.0
+pandas>=2.1.1
+plotly>=5.17.0
+
+# Testing
+pytest>=7.4.2
+pytest-cov>=4.1.0
+httpx>=0.24.1
+
+# Utilities
+python-jose>=3.3.0
+passlib>=1.7.4
+python-dotenv>=1.0.0
+loguru>=0.7.2
+
+# Development
+black>=23.9.1
+flake8>=6.1.0
+isort>=5.12.0
+mypy>=1.5.1
+
+# Environment and logging
+tqdm>=4.66.1
+
+# Documentation
+mkdocs>=1.5.3
+mkdocs-material>=9.4.6
+
+# ML Operations
+prometheus-fastapi-instrumentator>=6.1.0
+mlflow>=1.20.2
+
+# Model monitoring
+alibi-detect>=0.12.0
+seaborn>=0.13.0
+matplotlib>=3.8.0
+
+# Configuration
+pydantic-settings>=2.1.0 
