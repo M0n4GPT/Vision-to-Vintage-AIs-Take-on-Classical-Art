@@ -3,9 +3,29 @@
 
 This section outlines how our project meets the key Unit 8 requirements for a machine learning system deployed on the Chameleon cloud. We address data sourcing, persistent storage, offline and online data handling, an ETL pipeline, and an interactive dashboard to satisfy the unit's guidelines. 
 
-# Data Source: Kaggle Art Datasets
+# Data Organization and Preparation (April 28, 2025)
 
-We leverage public art datasets from Kaggle as our primary data source. In particular, the WikiArt dataset (over 120,000 images spanning 3,000+ artists and 200+ styles (WikiArt - Learn about the artist from the artwork - Kaggle)) and the Best Artworks of All Time dataset (artworks of the 50 most influential artists, with accompanying Wikipedia metadata (Best Artworks of All Time - Kaggle)) provide a rich collection of images. These datasets supply a diverse range of paintings and artwork images for model training and evaluation. We will obtain the data using the Kaggle API/CLI, which allows programmatic download of datasets using simple commands (e.g. kaggle datasets download <username>/<dataset-name> --unzip) (kaggle-api/docs/README.md at main · Kaggle/kaggle-api · GitHub). By using Kaggle's reliable data sources, we ensure our model is trained on a varied and reputable corpus of artwork imagery, satisfying the requirement for a robust data source. 
+Today, I organized and prepared the dataset for the project.
+Here’s what I accomplished:
+
+1. Created Final Dataset Structure
+I created a ZIP file containing the Training, Validation, Evaluation, and a new Test (Random) set.
+Each artist's images have been properly split into training, validation, and evaluation sets based on a 70-20-10 percentage split.
+
+The folder structure inside the ZIP looks like:
+
+![image](https://github.com/user-attachments/assets/af06d4cb-9d7e-4a95-9a91-e4a6d6d3f275)
+
+
+
+2. Training/Validation/Evaluation Splits Table
+Below is the detailed breakdown of how many images were assigned to each set for each artist:
+
+![image](https://github.com/user-attachments/assets/370590d3-c097-46d8-b833-a752e4700616)
+
+
+
+Additionally, a new test_random/ folder was created containing 50 random test images for later use in style transformation and evaluation.
 
 # Persistent Storage on Chameleon
 
