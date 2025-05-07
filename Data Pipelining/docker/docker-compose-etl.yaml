@@ -42,7 +42,6 @@ services:
         echo "Listing contents of /data/images_only after extract stage:"
         ls -l /data/images_only
 
-
   transform-data:
     container_name: etl_transform_data
     image: python:3.11
