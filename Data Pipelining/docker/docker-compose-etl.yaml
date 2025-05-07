@@ -1,4 +1,3 @@
-version: "3.8"
 name: artwork-etl
 
 volumes:
@@ -6,33 +5,45 @@ volumes:
 
 services:
   extract-data:
-    container_name: etl_extract_data
-    image: python:3.11
-    user: root
-    volumes:
-      - artwork:/data
-      - ../secrets:/root/.kaggle:ro
-    working_dir: /data
-    environment:
-      - KAGGLE_CONFIG_DIR=/root/.kaggle
-    command:
-      - bash
-      - -c
-      - |
-        set -e
+  container_name: etl_extract_data
+  image: python:3.11
+  user: root
+  volumes:
+    - artwork:/data
+    - ./secrets:/root/.kaggle:ro
+  working_dir: /data
+  command:
+    - bash
+    - -c
+    - |
+      set -e
 
-        echo "Resetting dataset directory..."
-        rm -rf raw_data
-        mkdir -p raw_data
-        cd raw_data
+      echo "Installing kaggle CLI..."
+      pip install kaggle
 
-        echo "Downloading dataset from Kaggle..."
-        kaggle datasets download -d ikarus777/best-artworks-of-all-time -p .
-        unzip -q best-artworks-of-all-time.zip
-        rm -f best-artworks-of-all-time.zip
+      echo "Setting Kaggle environment variable..."
+      export KAGGLE_CONFIG_DIR=/root/.kaggle
 
-        echo "Listing contents of /data after extract stage:"
-        ls -l /data/raw_data
+      echo "Resetting dataset directory..."
+      rm -rf ArtworkRaw
+      mkdir -p ArtworkRaw
+      cd ArtworkRaw
+
+      echo "Downloading dataset from Kaggle..."
+      kaggle datasets download -d ikarus777/best-artworks-of-all-time -p .
+
+      echo "Unzipping dataset..."
+      unzip -q best-artworks-of-all-time.zip
+      rm -f best-artworks-of-all-time.zip
+
+      echo "Keeping only the 'images' folder..."
+      mv images ../images_only
+      cd ..
+      rm -rf ArtworkRaw
+
+      echo "Listing contents of /data/images_only after extract stage:"
+      ls -l /data/images_only
+
 
   transform-data:
     container_name: etl_transform_data
