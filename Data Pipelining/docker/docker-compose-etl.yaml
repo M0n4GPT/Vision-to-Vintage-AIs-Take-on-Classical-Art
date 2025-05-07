@@ -1,4 +1,5 @@
-version: "3"
+version: "3.8"
+name: artwork-etl
 
 volumes:
   artwork:
@@ -10,16 +11,15 @@ services:
     user: root
     volumes:
       - artwork:/data
-      - ~/secrets/kaggle.json:/root/.kaggle/kaggle.json:ro
+      - ../secrets:/root/.kaggle:ro
     working_dir: /data
+    environment:
+      - KAGGLE_CONFIG_DIR=/root/.kaggle
     command:
       - bash
       - -c
       - |
         set -e
-
-        echo "Installing Kaggle CLI..."
-        pip install kaggle --quiet
 
         echo "Resetting dataset directory..."
         rm -rf raw_data
@@ -28,12 +28,10 @@ services:
 
         echo "Downloading dataset from Kaggle..."
         kaggle datasets download -d ikarus777/best-artworks-of-all-time -p .
-
-        echo "Unzipping..."
         unzip -q best-artworks-of-all-time.zip
         rm -f best-artworks-of-all-time.zip
 
-        echo "Contents of raw_data:"
+        echo "Listing contents of /data after extract stage:"
         ls -l /data/raw_data
 
   transform-data:
@@ -41,61 +39,52 @@ services:
     image: python:3.11
     volumes:
       - artwork:/data
-    working_dir: /data/raw_data
+    working_dir: /data
     command:
       - bash
       - -c
       - |
         set -e
+        pip install --quiet pillow numpy scikit-learn
 
-        pip install pillow --quiet
-
-        echo "Splitting, resizing, and normalizing images..."
         python3 - <<EOF
-import os, shutil, random
-from PIL import Image
+        import os
+        import shutil
+        import random
+        from PIL import Image
+        from sklearn.model_selection import train_test_split
 
-random.seed(42)
+        base_dir = "/data/raw_data/images"
+        output_dir = "/data/processed"
+        os.makedirs(output_dir, exist_ok=True)
 
-src_dir = "/data/raw_data/images"
-out_root = "/data/artwork_dataset"
-splits = {"train": 0.7, "val": 0.15, "test": 0.15}
-size = (256, 256)
+        artists = os.listdir(base_dir)
+        for artist in artists:
+            artist_path = os.path.join(base_dir, artist)
+            if not os.path.isdir(artist_path): continue
 
-os.makedirs(out_root, exist_ok=True)
+            images = [f for f in os.listdir(artist_path) if f.endswith(('.jpg', '.jpeg', '.png'))]
+            if len(images) < 10: continue
 
-for artist in os.listdir(src_dir):
-    artist_path = os.path.join(src_dir, artist)
-    if not os.path.isdir(artist_path): continue
+            train, testval = train_test_split(images, test_size=0.3, random_state=42)
+            val, test = train_test_split(testval, test_size=0.33, random_state=42)
 
-    images = os.listdir(artist_path)
-    random.shuffle(images)
+            for split_name, split_data in [("train", train), ("val", val), ("test", test)]:
+                split_dir = os.path.join(output_dir, split_name, artist)
+                os.makedirs(split_dir, exist_ok=True)
+                for fname in split_data:
+                    img_path = os.path.join(artist_path, fname)
+                    try:
+                        img = Image.open(img_path).convert("RGB").resize((256, 256))
+                        img.save(os.path.join(split_dir, fname))
+                    except Exception as e:
+                        print(f"Skipped {fname}: {e}")
+        EOF
 
-    n_total = len(images)
-    n_train = int(splits["train"] * n_total)
-    n_val = int(splits["val"] * n_total)
-
-    split_data = {
-        "train": images[:n_train],
-        "val": images[n_train:n_train+n_val],
-        "test": images[n_train+n_val:]
-    }
-
-    for split, split_imgs in split_data.items():
-        split_dir = os.path.join(out_root, split, artist)
-        os.makedirs(split_dir, exist_ok=True)
-        for img in split_imgs:
-            src = os.path.join(artist_path, img)
-            dst = os.path.join(split_dir, img)
-            try:
-                im = Image.open(src).convert('RGB').resize(size)
-                im.save(dst)
-            except Exception as e:
-                print(f"Error processing {src}: {e}")
-EOF
-
-        echo "Transformed dataset ready in /data/artwork_dataset"
-        ls -l /data/artwork_dataset
+        echo "Listing transformed dataset in /data/processed:"
+        ls -l /data/processed/train
+        ls -l /data/processed/val
+        ls -l /data/processed/test
 
   load-data:
     container_name: etl_load_data
@@ -111,16 +100,13 @@ EOF
           echo "ERROR: RCLONE_CONTAINER is not set"
           exit 1
         fi
+        echo "Uploading processed data to object store..."
+        rclone copy /data/processed chi_tacc:$RCLONE_CONTAINER \
+          --progress \
+          --transfers=32 \
+          --checkers=16 \
+          --multi-thread-streams=4 \
+          --fast-list
 
-        echo "Cleaning up existing contents of container..."
-        rclone delete chi_tacc:$RCLONE_CONTAINER --rmdirs || true
-
-        rclone copy /data/artwork_dataset chi_tacc:$RCLONE_CONTAINER \
-        --progress \
-        --transfers=32 \
-        --checkers=16 \
-        --multi-thread-streams=4 \
-        --fast-list
-
-        echo "Listing directories in container after load stage:"
+        echo "Upload complete:"
         rclone lsd chi_tacc:$RCLONE_CONTAINER
