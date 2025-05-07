@@ -3,46 +3,44 @@ name: artwork-etl
 volumes:
   artwork:
 
+version: "3.9"
+
+volumes:
+  artwork:
+
 services:
   extract-data:
-  container_name: etl_extract_data
-  image: python:3.11
-  user: root
-  volumes:
-    - artwork:/data
-    - ./secrets:/root/.kaggle:ro
-  working_dir: /data
-  command:
-    - bash
-    - -c
-    - |
-      set -e
+    container_name: etl_extract_data
+    image: python:3.11
+    user: root
+    volumes:
+      - artwork:/data
+    working_dir: /data
+    command:
+      - bash
+      - -c
+      - |
+        set -e
 
-      echo "Installing kaggle CLI..."
-      pip install kaggle
+        echo "Resetting dataset directory..."
+        rm -rf ArtworkRaw images_only
+        mkdir -p ArtworkRaw
+        cd ArtworkRaw
 
-      echo "Setting Kaggle environment variable..."
-      export KAGGLE_CONFIG_DIR=/root/.kaggle
+        echo "Downloading dataset zip using curl..."
+        curl -L -o best-artworks-of-all-time.zip https://www.kaggle.com/api/v1/datasets/download/ikarus777/best-artworks-of-all-time
 
-      echo "Resetting dataset directory..."
-      rm -rf ArtworkRaw
-      mkdir -p ArtworkRaw
-      cd ArtworkRaw
+        echo "Unzipping dataset..."
+        unzip -q best-artworks-of-all-time.zip
+        rm -f best-artworks-of-all-time.zip
 
-      echo "Downloading dataset from Kaggle..."
-      kaggle datasets download -d ikarus777/best-artworks-of-all-time -p .
+        echo "Moving only 'images' folder to /data/images_only..."
+        mv images /data/images_only
+        cd ..
+        rm -rf ArtworkRaw
 
-      echo "Unzipping dataset..."
-      unzip -q best-artworks-of-all-time.zip
-      rm -f best-artworks-of-all-time.zip
-
-      echo "Keeping only the 'images' folder..."
-      mv images ../images_only
-      cd ..
-      rm -rf ArtworkRaw
-
-      echo "Listing contents of /data/images_only after extract stage:"
-      ls -l /data/images_only
+        echo "Listing contents of /data/images_only after extract stage:"
+        ls -l /data/images_only
 
 
   transform-data:
