@@ -14,10 +14,12 @@ services:
       MINIO_ROOT_USER: "your-access-key"
       MINIO_ROOT_PASSWORD: "your-secret-key"
     healthcheck:
-      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
-      interval: 1s
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 10s
+
     command: server /data --console-address ":9001"
     volumes:
       - /mnt/block/minio_data:/data
