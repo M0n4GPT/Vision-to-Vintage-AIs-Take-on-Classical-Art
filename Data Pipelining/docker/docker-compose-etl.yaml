@@ -63,16 +63,29 @@ services:
         import os
         import random
         import shutil
+        import unicodedata
+        from PIL import Image
+        import numpy as np
 
         RAW_DIR = "/data/images_only/images"
         OUT_DIR = "/data/processed"
         SPLITS = ["train", "val", "test"]
         SPLIT_RATIOS = [0.7, 0.15, 0.15]
+        TARGET_SIZE = (224, 224)
 
         if not os.path.exists(RAW_DIR):
             raise Exception(f"Missing raw data at {RAW_DIR}")
 
         os.makedirs(OUT_DIR, exist_ok=True)
+
+        # Normalize folder names to handle Unicode inconsistencies
+        for folder_name in os.listdir(RAW_DIR):
+            original_path = os.path.join(RAW_DIR, folder_name)
+            if os.path.isdir(original_path):
+                normalized_name = unicodedata.normalize("NFC", folder_name)
+                normalized_path = os.path.join(RAW_DIR, normalized_name)
+                if original_path != normalized_path:
+                    os.rename(original_path, normalized_path)
 
         top_level_dirs = [d for d in os.listdir(RAW_DIR) if os.path.isdir(os.path.join(RAW_DIR, d))]
 
@@ -101,7 +114,14 @@ services:
                     for fname in split_map[split]:
                         src = os.path.join(artist_path, fname)
                         dst = os.path.join(split_dir, fname)
-                        shutil.copy2(src, dst)
+
+                        try:
+                            with Image.open(src) as img:
+                                img = img.convert("RGB")
+                                img = img.resize(TARGET_SIZE)
+                                img.save(dst)
+                        except Exception as e:
+                            print(f"Failed to process image {src}: {e}")
 
             except Exception as e:
                 print(f"Skipping artist {artist} due to error: {e}")
@@ -109,6 +129,7 @@ services:
 
         echo "Listing contents of /data/processed after transform stage:"
         ls -l /data/processed
+
 
 
   load-data:
