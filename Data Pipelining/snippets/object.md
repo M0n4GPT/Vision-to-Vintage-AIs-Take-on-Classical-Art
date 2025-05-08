@@ -19,14 +19,22 @@ This ETL pipeline processes the Best Artworks of All Time dataset from Kaggle. T
 | Storage Upload   | `rclone` official Docker image |
 | Dataset Source   | Kaggle API (via `curl`)        |
 
-**How to Run**
-Step 1: Set up environment
-export RCLONE_CONTAINER=object-persist-project35
+## **How to Run**
+setting up rclone path "Vision-to-Vintage-AIs-Take-on-Classical-Art/Data Pipelining/object_storage_setup
+/setup_steps.md"
 
-Step 2: Run each pipeline stage
+Step 2: Set up environment
+```bash
+export RCLONE_CONTAINER=object-persist-<yourNetID>
+```
+
+Step 3:Run each pipeline stage
+```bash
 docker compose -f Data\ Pipelining/docker/docker-compose-etl.yaml run extract-data
 docker compose -f Data\ Pipelining/docker/docker-compose-etl.yaml run transform-data
 docker compose -f Data\ Pipelining/docker/docker-compose-etl.yaml run load-data
+```
+
 
 **Output**
 * After extraction: /data/images_only/ contains original folders (50 artists).
