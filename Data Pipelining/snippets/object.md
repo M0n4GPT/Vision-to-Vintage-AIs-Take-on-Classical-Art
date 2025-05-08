@@ -163,6 +163,9 @@ This service runs a Python container image, downloads the dataset zip file from 
 
 2. A service that runs a Python container image, and uses a Python script to organize the artwork data into directories according to artist name.
 The script reads the downloaded dataset, splits the images for each artist into training, validation, and test sets (70/15/15 split), and creates a PyTorch-compatible directory structure under a new processed/ folder inside the shared artwork volume.
+Preprocessing: All images were resized to 224×224 pixels and normalized to ensure consistent input for model training.
+
+
 
 ```
   transform-data:
@@ -185,11 +188,14 @@ The script reads the downloaded dataset, splits the images for each artist into 
         import os
         import random
         import shutil
+        from PIL import Image
+        import numpy as np
 
         RAW_DIR = "/data/images_only/images"
         OUT_DIR = "/data/processed"
         SPLITS = ["train", "val", "test"]
         SPLIT_RATIOS = [0.7, 0.15, 0.15]
+        TARGET_SIZE = (224, 224)
 
         if not os.path.exists(RAW_DIR):
             raise Exception(f"Missing raw data at {RAW_DIR}")
@@ -223,7 +229,14 @@ The script reads the downloaded dataset, splits the images for each artist into 
                     for fname in split_map[split]:
                         src = os.path.join(artist_path, fname)
                         dst = os.path.join(split_dir, fname)
-                        shutil.copy2(src, dst)
+
+                        try:
+                            with Image.open(src) as img:
+                                img = img.convert("RGB")
+                                img = img.resize(TARGET_SIZE)
+                                img.save(dst)
+                        except Exception as e:
+                            print(f"Failed to process image {src}: {e}")
 
             except Exception as e:
                 print(f"Skipping artist {artist} due to error: {e}")
@@ -299,3 +312,24 @@ You can verify the upload through the Horizon GUI. The object store container is
 :::
 
 ::: {.cell .markdown}
+
+## Mount an object store to local file system
+**Step 1: Create a Mount Point**
+First, create a directory where the object store will be mounted:
+```bash
+sudo mkdir -p /mnt/project35
+sudo chown -R cc /mnt/project35
+sudo chgrp -R cc /mnt/project35
+```
+This sets up /mnt/object as the mount point with the appropriate permissions.
+
+**Step 2: Mount the Object Store Using Rclone**
+Assuming you've already configured rclone with a remote named chi_tacc, mount your object store container (e.g., object-persist_project35) to the mount point:
+```bash
+rclone mount chi_tacc:object-persist-project35 /mnt/project35 --read-only --allow-other --daemon
+```
+**Step 3: Verify the Mount**
+Check that the mount was successful and that the expected directories (train, test, val) are present:
+```bash
+ls /mnt/project35
+```
