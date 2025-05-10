@@ -62,7 +62,7 @@ services:
 
         RAW_DIR = "/data/random_images_only"
         OUT_DIR = "/data/random_split"
-        SPLIT_NAMES = ["random_train", "random_val", "random_test"]
+        SPLITS = ["random_train", "random_val", "random_test"]
         SPLIT_RATIOS = [0.7, 0.15, 0.15]
 
         if not os.path.exists(RAW_DIR):
@@ -70,38 +70,41 @@ services:
 
         os.makedirs(OUT_DIR, exist_ok=True)
 
-        # Step 1: List and shuffle all image files
-        all_images = [f for f in os.listdir(RAW_DIR) if f.lower().endswith((".jpg", ".jpeg", ".png"))]
-        all_images.sort()  # Optional: sort to make results deterministic before shuffle
+        all_images = sorted([
+            f for f in os.listdir(RAW_DIR)
+            if f.lower().endswith((".jpg", ".png", ".jpeg"))
+        ])
         random.seed(42)
         random.shuffle(all_images)
 
-        # Step 2: Compute split sizes with no rounding errors
-        n = len(all_images)
-        n_train = int(n * SPLIT_RATIOS[0])
-        n_val = int(n * SPLIT_RATIOS[1])
-        n_test = n - n_train - n_val
+        n_total = len(all_images)
+        n_train = int(SPLIT_RATIOS[0] * n_total)
+        n_val = int(SPLIT_RATIOS[1] * n_total)
+        n_test = n_total - n_train - n_val
 
-        splits = {
-            "random_train": all_images[:n_train],
-            "random_val": all_images[n_train:n_train + n_val],
-            "random_test": all_images[n_train + n_val:]
+        train_set = all_images[:n_train]
+        val_set = all_images[n_train:n_train + n_val]
+        test_set = all_images[n_train + n_val:]
+
+        split_map = {
+            "random_train": train_set,
+            "random_val": val_set,
+            "random_test": test_set
         }
 
-        print(f"Total images: {n}")
-        print(f"Train: {len(splits['random_train'])}, Val: {len(splits['random_val'])}, Test: {len(splits['random_test'])}")
-
-        # Step 3: Copy files to split folders
-        for split_name in SPLIT_NAMES:
-            split_dir = os.path.join(OUT_DIR, split_name)
+        used_files = set()
+        for split, files in split_map.items():
+            split_dir = os.path.join(OUT_DIR, split)
             os.makedirs(split_dir, exist_ok=True)
-            for fname in splits[split_name]:
-                src = os.path.join(RAW_DIR, fname)
-                dst = os.path.join(split_dir, fname)
-                shutil.copy2(src, dst)
+            for fname in files:
+                if fname in used_files:
+                    raise ValueError(f"Duplicate image detected: {fname}")
+                used_files.add(fname)
+                shutil.copy2(os.path.join(RAW_DIR, fname), os.path.join(split_dir, fname))
+
+        print("✅ Image splits completed without duplicates.")
         '
 
-        echo "✅ Dataset successfully split."
         echo "Listing contents of /data/random_split after transform stage:"
         ls -l /data/random_split
 
