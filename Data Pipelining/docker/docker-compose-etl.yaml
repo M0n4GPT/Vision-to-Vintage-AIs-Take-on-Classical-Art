@@ -2,12 +2,7 @@ name: artwork-etl
 
 volumes:
   artwork:
-
-version: "3.9"
-
-volumes:
-  artwork:
-
+  
 services:
   extract-data:
     container_name: etl_extract_data
