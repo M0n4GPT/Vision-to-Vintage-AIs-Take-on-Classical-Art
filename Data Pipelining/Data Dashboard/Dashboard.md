@@ -107,10 +107,44 @@ if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8050)
 ```
 
-4. Run the Dashboard
+4. Dockerfile
+
+We containerized the dashboard using this Dockerfile:
+```
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY app.py /app/
+
+RUN pip install --no-cache-dir dash pandas pillow plotly
+
+EXPOSE 8050
+
+CMD ["python", "app.py"]
+
+```
+
+5. Running the Dashboard
+   * Build the image:
+     ```bash
+     docker build -t dashboard-app .
+     ```
+   * Run the container with access to mounted artwork directory:
+     ```bash
+     docker run -d \
+  -p 8050:8050 \
+  --name dashboard \
+  --mount type=bind,source=/mnt/project35,target=/mnt/project35,readonly \
+  dashboard-app
+```
+
+6. Run the Dashboard
 Execute the application:
 
 ```bash
+ cd ~/Vision-to-Vintage-AIs-Take-on-Classical-Art/Data\ Pipelining/Data\ Dashboard
+source ~/dashboard-venv/bin/activate
 python3 app.py
 ```
 
