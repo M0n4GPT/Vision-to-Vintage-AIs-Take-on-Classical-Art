@@ -22,7 +22,10 @@ def get_image_counts():
                 if os.path.isdir(artist_path):
                     count = len([f for f in os.listdir(artist_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
                     data.append({'Split': split, 'Artist': artist, 'Count': count})
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    if df.empty:
+        print("⚠️ Warning: No data found for chart.")
+    return df
 
 def encode_image(image_path):
     try:
@@ -36,8 +39,12 @@ def encode_image(image_path):
 # Get image counts
 df_counts = get_image_counts()
 
-# Create bar chart
-fig = px.bar(df_counts, x='Artist', y='Count', color='Split', barmode='group', title='Image Counts per Artist and Split')
+# Initialize bar chart
+if not df_counts.empty and all(col in df_counts.columns for col in ['Artist', 'Count', 'Split']):
+    fig = px.bar(df_counts, x='Artist', y='Count', color='Split', barmode='group',
+                 title='Image Counts per Artist and Split')
+else:
+    fig = {}
 
 # Get sample images
 sample_images = []
