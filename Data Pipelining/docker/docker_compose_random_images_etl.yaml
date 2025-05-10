@@ -60,6 +60,7 @@ services:
         import os
         import random
         import shutil
+        import uuid
 
         RAW_DIR = "/data/random_images_only"
         OUT_DIR = "/data/random_split"
@@ -90,8 +91,12 @@ services:
         for split in SPLITS:
             split_dir = os.path.join(OUT_DIR, split)
             os.makedirs(split_dir, exist_ok=True)
-            for fname in split_map[split]:
-                shutil.copy2(os.path.join(RAW_DIR, fname), os.path.join(split_dir, fname))
+            for idx, fname in enumerate(split_map[split]):
+                src_path = os.path.join(RAW_DIR, fname)
+                ext = os.path.splitext(fname)[1]
+                unique_name = f"{split}_{idx}{ext}"
+                dst_path = os.path.join(split_dir, unique_name)
+                shutil.copy2(src_path, dst_path)
         '
 
         echo "Listing contents of /data/random_split after transform stage:"
