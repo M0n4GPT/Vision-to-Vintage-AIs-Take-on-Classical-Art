@@ -54,23 +54,6 @@ services:
 
         echo "Running transform script..."
         python3 -c '
-  transform-data:
-    container_name: etl_transform_data
-    image: python:3.11
-    volumes:
-      - artwork:/data
-    working_dir: /data
-    command:
-      - bash
-      - -c
-      - |
-        set -e
-
-        echo "Installing required libraries..."
-        pip install pillow numpy
-
-        echo "Running transform script..."
-        python3 -c '
         import os
         import random
         import shutil
