@@ -62,7 +62,12 @@ app.layout = html.Div([
 )
 def update_images(selected_split):
     display_blocks = []
-    split_path = os.path.join(DATA_DIR, selected_split)
+
+    # Adjust path depending on the split type
+    if selected_split in random_splits:
+        split_path = os.path.join(DATA_DIR, "random_inputs", selected_split)
+    else:
+        split_path = os.path.join(DATA_DIR, selected_split)
 
     if not os.path.exists(split_path):
         return [html.P("Selected directory does not exist.")]
@@ -100,6 +105,7 @@ def update_images(selected_split):
                 ], style={'margin': '10px'}))
 
     return display_blocks
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8050, debug=True)
