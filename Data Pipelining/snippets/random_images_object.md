@@ -147,7 +147,7 @@ Uploads processed folders to the object store.
 ## Run the Pipeline
 
 ```bash
- cd ~/Vision-to-Vintage-AIs-Take-on-Classical-Art
+cd ~/Vision-to-Vintage-AIs-Take-on-Classical-Art/Data\ Pipelining/docker
 export RCLONE_CONTAINER=object-persist-project35
 
 docker compose -f docker_compose_random_images_etl.yaml run extract-random
