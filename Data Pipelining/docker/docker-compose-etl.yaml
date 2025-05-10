@@ -124,11 +124,6 @@ services:
         echo "Listing contents of /data/processed after transform stage:"
         ls -l /data/processed
 
-        '
-
-        echo "Listing contents of /data/processed after transform stage:"
-        ls -l /data/processed
-
 
 
   load-data:
