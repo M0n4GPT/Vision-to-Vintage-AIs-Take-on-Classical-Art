@@ -57,7 +57,7 @@ services:
         import os
         import random
         import shutil
-        import unicodedata`
+        import unicodedata
         from PIL import Image
         import numpy as np
 
