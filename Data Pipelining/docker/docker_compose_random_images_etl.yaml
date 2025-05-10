@@ -60,7 +60,7 @@ services:
         import os
         import random
         import shutil
-        import uuid
+        import hashlib
 
         RAW_DIR = "/data/random_images_only"
         OUT_DIR = "/data/random_split"
@@ -72,35 +72,50 @@ services:
 
         os.makedirs(OUT_DIR, exist_ok=True)
 
-        images = [f for f in os.listdir(RAW_DIR) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
-        random.shuffle(images)
+        def compute_sha256(file_path):
+            hash_func = hashlib.sha256()
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(8192), b""):
+                    hash_func.update(chunk)
+            return hash_func.hexdigest()
 
-        n_total = len(images)
+        # Collect all images and compute unique hashes
+        hash_to_path = {}
+        for fname in os.listdir(RAW_DIR):
+            if fname.lower().endswith((".jpg", ".jpeg", ".png")):
+                path = os.path.join(RAW_DIR, fname)
+                file_hash = compute_sha256(path)
+                hash_to_path[file_hash] = path  # only keep one file per hash
+
+        unique_hashes = list(hash_to_path.keys())
+        random.shuffle(unique_hashes)
+
+        n_total = len(unique_hashes)
         n_train = int(SPLIT_RATIOS[0] * n_total)
         n_val = int(SPLIT_RATIOS[1] * n_total)
         n_test = n_total - n_train - n_val
 
-        print(f"Total random images: {n_total}")
+        print(f"Total unique images after hash filtering: {n_total}")
 
         split_map = {
-            "random_train": images[:n_train],
-            "random_val": images[n_train:n_train+n_val],
-            "random_test": images[n_train+n_val:]
+            "random_train": unique_hashes[:n_train],
+            "random_val": unique_hashes[n_train:n_train + n_val],
+            "random_test": unique_hashes[n_train + n_val:]
         }
 
         for split in SPLITS:
             split_dir = os.path.join(OUT_DIR, split)
             os.makedirs(split_dir, exist_ok=True)
-            for idx, fname in enumerate(split_map[split]):
-                src_path = os.path.join(RAW_DIR, fname)
-                ext = os.path.splitext(fname)[1]
-                unique_name = f"{split}_{idx}{ext}"
-                dst_path = os.path.join(split_dir, unique_name)
-                shutil.copy2(src_path, dst_path)
+            for i, file_hash in enumerate(split_map[split]):
+                src = hash_to_path[file_hash]
+                ext = os.path.splitext(src)[1]
+                dst = os.path.join(split_dir, f"{split}_{i}{ext}")
+                shutil.copy2(src, dst)
         '
 
         echo "Listing contents of /data/random_split after transform stage:"
         ls -l /data/random_split
+
 
 
   load-random:
