@@ -39,12 +39,16 @@ def encode_image(image_path):
 
 # Bar chart for image counts
 df_counts = get_image_counts()
-
-if not df_counts.empty:
+if df_counts.empty:
+    fig = {
+        "layout": {
+            "title": "No data available for visualization"
+        }
+    }
+else:
     fig = px.bar(df_counts, x='Artist', y='Count', color='Split',
                  barmode='group', title='Image Counts per Artist and Split')
-else:
-    fig = px.bar(title="No data available for artwork splits.")
+
 
 # Layout
 app.layout = html.Div([
