@@ -132,10 +132,8 @@ CMD ["python", "app.py"]
      ```
    * Run the container with access to mounted artwork directory:
      ```bash
-     docker run -d \
-      -p 8050:8050 \
-      --name dashboard \
-      --mount type=bind,source=/mnt/project35,target=/mnt/project35,readonly \ dashboard-app
+      docker run -d -p 8050:8050 --name dashboard --mount type=bind,source=/mnt/project35,target=/mnt/project35,readonly dashboard-app
+
 ```
 
 6. Run the Dashboard
