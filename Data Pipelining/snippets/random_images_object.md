@@ -53,7 +53,7 @@ Downloads the dataset zip file via `curl`, unzips it, and places the folder unde
 Splits into train/val/test
 
 ```yaml
-  transform-random:
+transform-random:
     container_name: etl_transform_random
     image: python:3.11
     volumes:
@@ -84,27 +84,39 @@ Splits into train/val/test
 
         os.makedirs(OUT_DIR, exist_ok=True)
 
-        images = [f for f in os.listdir(RAW_DIR) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
-        random.shuffle(images)
+        all_images = sorted([
+            f for f in os.listdir(RAW_DIR)
+            if f.lower().endswith((".jpg", ".png", ".jpeg"))
+        ])
+        random.seed(42)
+        random.shuffle(all_images)
 
-        n_total = len(images)
+        n_total = len(all_images)
         n_train = int(SPLIT_RATIOS[0] * n_total)
         n_val = int(SPLIT_RATIOS[1] * n_total)
         n_test = n_total - n_train - n_val
 
-        print(f"Total random images: {n_total}")
+        train_set = all_images[:n_train]
+        val_set = all_images[n_train:n_train + n_val]
+        test_set = all_images[n_train + n_val:]
 
         split_map = {
-            "random_train": images[:n_train],
-            "random_val": images[n_train:n_train+n_val],
-            "random_test": images[n_train+n_val:]
+            "random_train": train_set,
+            "random_val": val_set,
+            "random_test": test_set
         }
 
-        for split in SPLITS:
+        used_files = set()
+        for split, files in split_map.items():
             split_dir = os.path.join(OUT_DIR, split)
             os.makedirs(split_dir, exist_ok=True)
-            for fname in split_map[split]:
+            for fname in files:
+                if fname in used_files:
+                    raise ValueError(f"Duplicate image detected: {fname}")
+                used_files.add(fname)
                 shutil.copy2(os.path.join(RAW_DIR, fname), os.path.join(split_dir, fname))
+
+        print("✅ Image splits completed without duplicates.")
         '
 
         echo "Listing contents of /data/random_split after transform stage:"
@@ -154,3 +166,4 @@ docker compose -f docker_compose_random_images_etl.yaml run extract-random
 docker compose -f docker_compose_random_images_etl.yaml run transform-random
 docker compose -f docker_compose_random_images_etl.yaml run load-random
 ```
+
