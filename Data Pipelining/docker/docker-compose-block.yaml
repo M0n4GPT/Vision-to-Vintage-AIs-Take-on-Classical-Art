@@ -53,7 +53,7 @@ services:
       - /mnt/block/postgres_data:/var/lib/postgresql/data
 
   mlflow:
-    image: mlflow-with-deps
+    image: cr.fly.dev/mlflow/mlflow-with-psycopg2:2.20.2
     container_name: mlflow
     restart: always
     depends_on:
