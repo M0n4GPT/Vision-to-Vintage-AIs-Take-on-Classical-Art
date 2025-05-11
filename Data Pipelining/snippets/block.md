@@ -132,7 +132,7 @@ We use Docker Compose to bring up the following services:
 
 The Docker Compose file is located at:
 ```bash
- cd ~/Vision-to-Vintage-AIs-Take-on-Classical-Art/Data\ Pipelining/ docker
+ cd ~/Vision-to-Vintage-AIs-Take-on-Classical-Art/Data\ Pipelining
 ```
 Run the services:
 ```bash
