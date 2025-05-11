@@ -134,6 +134,11 @@ The Docker Compose file is located at:
 ```bash
  cd ~/Vision-to-Vintage-AIs-Take-on-Classical-Art/Data\ Pipelining
 ```
+Bring the services:
+```bah
+HOST_IP=$(curl --silent http://169.254.169.254/latest/meta-data/public-ipv4)
+```
+
 Run the services:
 ```bash
 docker compose -f docker/docker-compose-block.yaml up -d
