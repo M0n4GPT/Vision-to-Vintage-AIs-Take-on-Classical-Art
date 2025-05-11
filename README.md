@@ -273,97 +273,56 @@ Satisfies Unit 7:
 -->
 
 #### Data pipeline
+This README provides a comprehensive walkthrough of the data pipelining component for the AI Art Experience project, following the guidelines specified for Unit 8. 
+All steps include references to scripts and outputs in this repository and instructions for running the pipeline on Chameleon Cloud.
 
-##### Architecture & Implementation
-```
-Delta Lake Pipeline (Lab 5)
-(spark.readStream
-.format("kafka")
-.option("kafka.bootstrap.servers", "kafka:9092")
-.load()
-.writeStream
-.format("delta")
-.trigger(processingTime="1m")
-.toTable("visitor_interactions"))
-```
+**Persistent Storage**
+* Block Storage (Deployed on KVM@TACC): https://chi.tacc.chameleoncloud.org/project/containers/container/object-persist-project35
+* Mounted at: /mnt/project35
+* Purpose: Hosts persistent application data (e.g., MLflow experiments, PostgreSQL data, model weights).
 
-**Key Components**:
-1. **Persistent Storage**: 1TB S3 bucket (Chameleon Lab 8)
-2. **Data Validation**: Great Expectations 98% schema compliance
-3. **Versioning**: Delta Lake 30-day history
+**Object Storage (Deployed via MinIO on Baremetal):**
+* Mounted using rclone at: /mnt/project35 (alias: chi_tacc:object-persist-project35)
+* Purpose: Stores training data (images from 50 artists).
+* Contents: Structured as:
+  /mnt/project35/train
+  /mnt/project35/test
+  /mnt/project35/val
+* Each contains subfolders for individual artist names (e.g., train/monet/, val/van_gogh/).
 
-**Data Flow**:
-1. **Batch Ingestion**: 400GB/day from Met/WikiArt
-2. **Stream Processing**: 500 msg/sec via Kafka
-3. **Feature Store**: Feast for style embeddings
+**Offline Data Pipeline**
+Dataset
+* Source: https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time
+* Format: ZIP containing 50 artist folders with JPEG paintings.
+* Lineage: Downloaded and extracted in the pipeline using kaggle CLI.
 
-<!--
-Satisfies Unit 8:
-- ACID-compliant Delta Lake
-- GDPR-compliant data handling
-- Structured/unstructured data management
--->
+**Pipeline Script:** Data Pipelining/docker/docker-compose-etl.yaml
 
-## Continuous X (Unit 3)
+* Functions:
+1] Extract the ZIP
+2] Randomly split each artist’s folder into train (70%), val (15%), test (15%)
+3] Organize files into /train/artist_name/, /val/artist_name/, /test/artist_name/
+4] Upload structured data via rclone
 
-### CI/CD Pipeline
+* Preprocessing (within pipeline)
+* Resizing all images to 256x256
+* Normalizing pixel values
+* Splitting is done artist-wise to preserve class boundaries and avoid leakage
 
-We implement a **GitHub Actions CI/CD pipeline** called **ML Pipeline** to automate testing, building, and deployment processes:
+ **Online Data Pipeline**
+ Simulated Production Data Script
 
-```yaml
-name: ML Pipeline
-on: [push]
+ * Script: Data Pipelining/Simulate Online Data
+ * Function: Mimics real-time image arrival by periodically sending images from the production folder (random_test folder inside Object store) to the model inference API endpoint.
+ * Format: Python script uses requests to POST image files to endpoint every few seconds.
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Unit Tests
-        run: pytest tests/unit/
+**Data Dashboard**
+Dashboard Location: Data Pipelining/Data Dashboard
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to Staging
-        run: kubectl apply -f k8s/staging/
-```
+Benefit:
+* Allows the end-user or admin to quickly assess if data is balanced and suitable for training or production.
 
-### Core Features
 
-- **Terraform Infrastructure-as-Code**:
-  ```hcl
-  resource "kubernetes_deployment" "style_transfer" {
-    metadata {
-      name = "style-transfer"
-    }
-    spec {
-      replicas = 3
-    }
-  }
-  ```
-  We use Terraform to define and deploy Kubernetes resources declaratively.
+ 
 
-- **Prometheus Alerts**:
-  - P99 latency exceeding **250ms** triggers an automatic rollback to the previous stable deployment.
-
-- **Daily Builds**:
-  - The CI/CD pipeline runs daily scheduled builds and tests.
-  - Average pipeline runtime: **12 minutes**.
-
-- **Automated Retraining**:
-  - If **model accuracy** falls below **60%**, an automatic retraining pipeline is triggered:
-    ```python
-    if accuracy < 0.6:
-        trigger_retraining(feedback_data)
-    ```
-This ensures the deployed models are continuously monitored, evaluated, and retrained as necessary to maintain optimal performance in production.
-
----
-
-### Satisfies Unit 3 Requirements
-
--  GitHub Actions CI/CD implemented for automated testing, building, and deployment.
--  Immutable infrastructure setup using Terraform and Kubernetes manifests.
--  Staged deployments using GitHub Actions, Kubernetes, and Istio for canary releases.
 
