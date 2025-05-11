@@ -12,7 +12,7 @@ minio:
     MINIO_ROOT_USER: "your-access-key"
     MINIO_ROOT_PASSWORD: "your-secret-key"
   healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+    test: ["CMD", "curl", "-f", "http://localhost:9000/health/live"]
     interval: 10s
     timeout: 10s
     retries: 5
