@@ -12,21 +12,6 @@ import tensorflow_hub as hub
 import tensorflow as tf
 import numpy as np
 from PIL import Image
-import boto3
-from mimetypes import guess_type
-from datetime import datetime
-import uuid
-from concurrent.futures import ThreadPoolExecutor
-executor = ThreadPoolExecutor(max_workers=2)
-
-s3 = boto3.client(
-    's3',
-    endpoint_url=os.environ['MINIO_URL'],
-    aws_access_key_id=os.environ['MINIO_USER'],
-    aws_secret_access_key=os.environ['MINIO_PASSWORD'],
-    region_name='us-east-1'
-)
-
 
 #  CONFIG 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
