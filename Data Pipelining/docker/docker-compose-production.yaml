@@ -3,7 +3,7 @@ name: production
 services:
   vision_to_vintage:
     build:
-      context: ../ModelTraining/vision-to-vintage-app
+      context: ../ModelTraining/app
       dockerfile: Dockerfile
     container_name: vision_to_vintage
     ports:
