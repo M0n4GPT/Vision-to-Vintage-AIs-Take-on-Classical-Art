@@ -52,7 +52,7 @@ minio:
       - /mnt/block/postgres_data:/var/lib/postgresql/data
 
 mlflow:
-  image: ghcr.io/mlflow/mlflow:v2.20.2
+  image: mlflow-with-deps
   container_name: mlflow
   restart: always
   depends_on:
