@@ -68,7 +68,7 @@ Here’s a structured table for summarizing the outside materials used in our pr
 |              | How it was created | Conditions of use |
 |--------------|--------------------|-------------------|
 |**Best Artworks of All Time** |Large-scale dataset of artworks with metadata across 1,000+ artists.[Link](https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time)|      Public Kaggle dataset – for non-commercial, research, and educational use. |
-|**WikiArt Full Collection (120K)** |High-resolution public domain images of artworks from The Met’s collection. [Link](https://www.kaggle.com/datasets/antoinegruson/-wikiart-all-images-120k-link/data)| Public Kaggle dataset – educational use; some artworks may be under copyright.|
+|**Random Image Sample Dataset** |This Dataset comprises of 3000 Random Pictures of 150 X 150 pixels. It contains mountains, cities, greenries, icelands, forest etc. [Link](https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset)| Public Kaggle dataset – educational use; some artworks may be under copyright.|
 |**Style-Transfer-GAN Repo**| GitHub implementation of GAN-based style transfer for artistic image generation.  [Link](https://github.com/temilaj/Style-Transfer-GAN) |MIT License – free for research and commercial use with attribution.|
 |**VGG-19 Model**|Pre-trained convolutional neural network (CNN) used for style transfer. [Link](https://pytorch.org/vision/stable/models.html)|Open-source under **MIT License**, can be used for academic research.|
 |**CLIP (Contrastive Language–Image Pretraining)**|Foundation model by OpenAI that connects images and text for classification. [Link](https://openai.com/research/clip)|Open-source for **non-commercial research**; commercial usage requires permission.|
@@ -280,6 +280,8 @@ All steps include references to scripts and outputs in this repository and instr
 * Block Storage (Deployed on KVM@TACC):
 * Mounted at: /mnt/project35
 * Purpose: Hosts persistent application data (e.g., MLflow experiments, PostgreSQL data, model weights).
+* [docker-compose-block.yaml] (https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/main/Data%20Pipelining/docker/docker-compose-block.yaml)
+* [block.md] (https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/main/Data%20Pipelining/snippets/block.md)
 
 **Object Storage (Deployed via MinIO on Baremetal):**
 * Mounted using rclone at: /mnt/project35 (alias: chi_tacc:object-persist-project35)
@@ -288,12 +290,17 @@ All steps include references to scripts and outputs in this repository and instr
   /mnt/project35/train
   /mnt/project35/test
   /mnt/project35/val
-* Each contains subfolders for individual artist names (e.g., train/monet/, val/van_gogh/).
+* Each contains subfolders for individual artist names (e.g., train/monet/, val/van_gogh/). [Link to the object store](https://chi.tacc.chameleoncloud.org/project/containers/container/object-persist-project35)
+* We have used another dataset with random images which is stored inside the random_inputs folder. Inside this folder the images inside random_train and random_val are used for training purposes and random_test is used for simulating production data.
+* [Link to all the yaml file for creating persistant storage](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/docker)
+* [Link to the snippets folder with .md files](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/snippets)
+* [Link to object storage setup](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/object_storage_setup)
 
 **Offline Data Pipeline**
 Dataset
-* Source: https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time
-* Format: ZIP containing 50 artist folders with JPEG paintings.
+* Source: [Best Artwork of all time] (https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time) This dataset contains 50 folders with the painting of different artists
+* Source: [Random Image Sample] (https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset) This dataset has 3000 random images
+* Format: ZIP 
 * Lineage: Downloaded and extracted in the pipeline using kaggle CLI.
 
 **Pipeline Script:** Data Pipelining/docker/docker-compose-etl.yaml
@@ -312,14 +319,14 @@ Dataset
  **Online Data Pipeline**
  Simulated Production Data Script
 
- * Script: Data Pipelining/Simulate Online Data
+ * [Script](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/Simulate%20Online%20Data)
  * Function: Mimics real-time image arrival by periodically sending images from the production folder (random_test folder inside Object store) to the model inference API endpoint.
  * Format: Python script uses requests to POST image files to endpoint every few seconds.
 
 **Data Dashboard**
-Dashboard Location: Data Pipelining/Data Dashboard
-
-Benefit:
+Dashboard Location: [Dashboard Folder](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/Data%20Dashboard)
+Runs on: 
+Benefit: Access the dashboard by navigating to [link](http://129.114.25.100:8050) in your web browser.
 * Allows the end-user or admin to quickly assess if data is balanced and suitable for training or production.
 
 
