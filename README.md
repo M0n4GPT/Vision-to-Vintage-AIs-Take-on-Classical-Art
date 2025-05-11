@@ -277,7 +277,7 @@ This README provides a comprehensive walkthrough of the data pipelining componen
 All steps include references to scripts and outputs in this repository and instructions for running the pipeline on Chameleon Cloud.
 
 **Persistent Storage**
-* Block Storage (Deployed on KVM@TACC): https://chi.tacc.chameleoncloud.org/project/containers/container/object-persist-project35
+* Block Storage (Deployed on KVM@TACC):
 * Mounted at: /mnt/project35
 * Purpose: Hosts persistent application data (e.g., MLflow experiments, PostgreSQL data, model weights).
 
