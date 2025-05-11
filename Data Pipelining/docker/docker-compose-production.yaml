@@ -3,7 +3,7 @@ name: production
 services:
   vision_to_vintage:
     build:
-      context: /home/cc/Vision-to-Vintage-AIs-Take-on-Classical-Art/Data Pipelining/ModelTraining/app
+      context: /home/cc/Vision-to-Vintage-AIs-Take-on-Classical-Art/ModelTraining/app
       dockerfile: Dockerfile
     container_name: vision_to_vintage
     ports:
