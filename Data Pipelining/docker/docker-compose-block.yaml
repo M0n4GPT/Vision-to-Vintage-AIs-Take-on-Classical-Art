@@ -58,19 +58,23 @@ services:
     restart: always
     depends_on:
       - minio
-      - postgres
       - minio-create-bucket
     environment:
-      MLFLOW_TRACKING_URI: http://0.0.0.0:8000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: "your-access-key"
-      AWS_SECRET_ACCESS_KEY: "your-secret-key"
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin123
+    volumes:
+      - /mnt/block/mlflow_data:/mlflow
     ports:
       - "8000:8000"
     command: >
-      /bin/sh -c "pip install psycopg2-binary boto3 &&
-      mlflow server --backend-store-uri postgresql://user:password@postgres/mlflowdb \
-      --artifacts-destination s3://mlflow-artifacts/ --serve-artifacts --host 0.0.0.0 --port 8000"
+      mlflow server \
+        --backend-store-uri sqlite:///mlflow/mlflow.db \
+        --default-artifact-root s3://mlflow-artifacts/ \
+        --serve-artifacts \
+        --host 0.0.0.0 \
+        --port 8000
+
 
 
   jupyter:
