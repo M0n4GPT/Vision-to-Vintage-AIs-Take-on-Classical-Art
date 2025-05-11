@@ -23,7 +23,7 @@ from PIL import Image
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 STYLE_DIR     = os.path.join(BASE_DIR, 'style')
-HUB_URL      = "https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2"
+HUB_URL      = HUB_URL = "/app/tfhub_models/arbitrary-style"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # os.makedirs(STYLE_DIR,    exist_ok=True)
