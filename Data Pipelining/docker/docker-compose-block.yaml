@@ -53,7 +53,7 @@ services:
       - /mnt/block/postgres_data:/var/lib/postgresql/data
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.20.2
+    image: mlflow-with-deps
     container_name: mlflow
     restart: always
     depends_on:
@@ -68,13 +68,12 @@ services:
     ports:
       - "8000:8000"
     command: >
-      /bin/sh -c "pip install psycopg2-binary boto3 &&
       mlflow server \
         --backend-store-uri postgresql://mlflow:mlflow123@postgres:5432/mlflowdb \
-        --default-artifact-root s3://mlflow/ \
+        --default-artifact-root s3://mlflow-artifacts/ \
         --serve-artifacts \
         --host 0.0.0.0 \
-        --port 8000"
+        --port 8000
 
 
   jupyter:
