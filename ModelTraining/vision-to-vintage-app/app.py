@@ -1,6 +1,12 @@
 import os
 import time
 import random
+from mimetypes import guess_type
+from datetime import datetime
+import uuid
+import boto3
+from concurrent.futures import ThreadPoolExecutor
+
 
 from flask import (
     Flask, request,
@@ -28,6 +34,17 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 #  LOAD TF‑HUB MODEL 
 hub_model = hub.load(HUB_URL)
 
+executor = ThreadPoolExecutor(max_workers=2)
+
+s3 = boto3.client(
+    's3',
+    endpoint_url=os.environ['MINIO_URL'],
+    aws_access_key_id=os.environ['MINIO_USER'],
+    aws_secret_access_key=os.environ['MINIO_PASSWORD'],
+    region_name='us-east-1'
+)
+
+
 #  HELPERS 
 def load_img(path, max_dim=512):
     """Load an image from disk, resize so longest side <= max_dim, normalize [0,1], batch it."""
@@ -54,6 +71,27 @@ def parse_style_name(style_path):
     fn, _ = os.path.splitext(os.path.basename(style_path))
     author, title = fn.split(",", 1)
     return title, author
+
+def upload_to_production_bucket(img_path, style_used, prediction_id):
+    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    content_type = guess_type(img_path)[0] or 'application/octet-stream'
+    ext = os.path.splitext(img_path)[-1]
+    s3_key = f"{style_used}/{prediction_id}{ext}"
+
+    with open(img_path, 'rb') as f:
+        s3.upload_fileobj(f, "production", s3_key, ExtraArgs={'ContentType': content_type})
+
+    s3.put_object_tagging(
+        Bucket="production",
+        Key=s3_key,
+        Tagging={
+            'TagSet': [
+                {'Key': 'style', 'Value': style_used},
+                {'Key': 'timestamp', 'Value': timestamp}
+            ]
+        }
+    )
+
 
 # ROUTES 
 @app.route("/", methods=["GET", "POST"])
@@ -107,6 +145,11 @@ def index():
     out_filename = f"stylized_{filename}"
     out_path     = os.path.join(app.config["UPLOAD_FOLDER"], out_filename)
     out_img.save(out_path)
+
+    # Generate prediction ID and send image to production bucket
+    prediction_id = str(uuid.uuid4())
+    executor.submit(upload_to_production_bucket, out_path, author, prediction_id)
+
 
     # parse for display
     title, author = parse_style_name(style_path)
