@@ -102,4 +102,83 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 ::: {.cell .markdown}
 
+## Create Docker Volumes on Persistent Block Storage
 
+In this project, we are building a style transfer system that transforms input images into the style of famous artists. To ensure the model training environment is persistent across VM restarts, we configure key ML platform services (MLFlow, PostgreSQL, MinIO, and Jupyter) to use Chameleon Cloud’s persistent block storage.
+
+Our goal is to:
+
+1. Log all experiments using MLFlow
+2. Store model parameters and metrics in PostgreSQLSave model artifacts in MinIO
+3. Train and evaluate our models in JupyterLab
+
+All these services will use mounted block storage directories to persist data across instance shutdowns.
+
+### Prepare Persistent Storage Directories
+The persistent volume was mounted at:
+```bash
+/mnt/block/
+```
+
+These folders serve as volume mounts for our PostgreSQL and MinIO services.
+
+### Configure Docker Compose
+
+We use Docker Compose to bring up the following services:
+* mlflow: Experiment tracking service
+* postgres: Backend database for MLFlow
+* minio: Object store for saving model files/artifacts
+* jupyter: Interactive notebook server
+
+The Docker Compose file is located at:
+```bash
+ cd ~/Vision-to-Vintage-AIs-Take-on-Classical-Art/Data\ Pipelining/ docker
+```
+Run the services:
+```bash
+docker compose -f docker/docker-compose-block.yaml up -d
+```
+You should see all services starting with status Running or Healthy.
+
+![image](https://github.com/user-attachments/assets/39fd5516-f14b-4e52-8d57-4b9f1228d166)
+
+### Open Services in Browser
+
+To make the services accessible from your browser, open the following ports in your Chameleon Cloud security group:
+
+| Service    | Port | Example URL                     |
+| ---------- | ---- | ------------------------------- |
+| MLFlow     | 8000 | http\://YOUR\_FLOATING\_IP:8000 |
+| JupyterLab | 8888 | http\://YOUR\_FLOATING\_IP:8888 |
+| MinIO      | 9000 | http\://YOUR\_FLOATING\_IP:9000 |
+
+
+Example:
+If our floating IP is 129.114.25.100:
+
+MLFlow: http://129.114.25.100:8000
+
+MinIO: http://129.114.25.100:9000
+
+Jupyter: http://129.114.25.100:8888
+
+### Tracking ML Experiments with MLFlow
+Once Jupyter is running, we can log experiments by adding the following snippet to any notebook that evaluates or trains a model:
+
+```
+import mlflow
+import mlflow.pytorch
+
+mlflow.set_experiment("style-transfer-artwork")
+
+with mlflow.start_run():
+    mlflow.log_metric("eval_accuracy", overall_accuracy)
+    mlflow.pytorch.log_model(model, "style_transfer_model")
+
+```
+
+This will:
+
+* Log the evaluation metric (overall_accuracy) to PostgreSQL
+
+* Save the trained model to MinIO, under the mlflow bucket
