@@ -1,13 +1,10 @@
 import os
 import time
 import random
-from mimetypes import guess_type
-from datetime import datetime
-import uuid
-import boto3
-from concurrent.futures import ThreadPoolExecutor
-executor = ThreadPoolExecutor(max_workers=2)
 
+
+PRODUCTION_DIR = "/mnt/object/production data"
+os.makedirs(PRODUCTION_DIR, exist_ok=True)
 
 from flask import (
     Flask, request,
@@ -34,16 +31,6 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 #  LOAD TF‑HUB MODEL 
 hub_model = hub.load(HUB_URL)
-
-executor = ThreadPoolExecutor(max_workers=2)
-
-s3 = boto3.client(
-    's3',
-    endpoint_url=os.environ['MINIO_URL'],
-    aws_access_key_id=os.environ['MINIO_USER'],
-    aws_secret_access_key=os.environ['MINIO_PASSWORD'],
-    region_name='us-east-1'
-)
 
 
 #  HELPERS 
@@ -73,33 +60,7 @@ def parse_style_name(style_path):
     author, title = fn.split(",", 1)
     return title, author
 
-def upload_production_bucket(img_path, author):
-    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    prediction_id = str(uuid.uuid4())
-    class_dir = author.replace(" ", "_")
 
-    bucket_name = "production"
-    root, ext = os.path.splitext(img_path)
-    content_type = guess_type(img_path)[0] or 'application/octet-stream'
-    s3_key = f"{class_dir}/{prediction_id}{ext}"
-
-    with open(img_path, 'rb') as f:
-        s3.upload_fileobj(f,
-            bucket_name,
-            s3_key,
-            ExtraArgs={'ContentType': content_type}
-        )
-
-    s3.put_object_tagging(
-        Bucket=bucket_name,
-        Key=s3_key,
-        Tagging={
-            'TagSet': [
-                {'Key': 'predicted_class', 'Value': class_dir},
-                {'Key': 'timestamp', 'Value': timestamp}
-            ]
-        }
-    )
 
 
 
@@ -118,6 +79,15 @@ def index():
     filename     = secure_filename(file.filename)
     content_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(content_path)
+
+    import shutil
+    from datetime import datetime
+    
+    # Save to object store production folder
+    timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
+    prod_filename = f"{timestamp}_{filename}"
+    shutil.copy(content_path, os.path.join(PRODUCTION_DIR, prod_filename))
+
 
     # list of all possible authors
     ALL_AUTHORS = [
@@ -156,9 +126,6 @@ def index():
     out_path     = os.path.join(app.config["UPLOAD_FOLDER"], out_filename)
     out_img.save(out_path)
 
-    # Generate prediction ID and send image to production bucket
-    prediction_id = str(uuid.uuid4())
-    executor.submit(upload_production_bucket, out_path, author)
 
 
     # parse for display
