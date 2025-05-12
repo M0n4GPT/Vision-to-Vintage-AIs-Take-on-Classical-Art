@@ -85,3 +85,40 @@ ENV/
 *.pth
 *.onnx
 *.pb
+
+# IDE - Cursor & VS Code
+.cursor/
+*.code-workspace
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+*.whl
+
+# MLflow - Local Data (adjust if you intentionally version control this)
+mlruns/
+data/mlflow/ # If it's for local MLflow files
+mlflow.db
+
+# Generated Reports & Logs
+drift_detections/*.json
+logs/
+*.log
+tests/load_test_results/
+
+# Generated Images/Artifacts
+direct_stylizer_output.png
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+
+# Other potential large files (be specific)
+# Example: data/large_dataset_cache/
