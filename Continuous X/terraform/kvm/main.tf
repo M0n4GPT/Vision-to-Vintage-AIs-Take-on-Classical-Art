@@ -1,70 +1,65 @@
-variable "image_name" {}
-variable "flavor_name" {}
-variable "key_pair" {}
-variable "security_groups" {}
-variable "private_fixed_ips" {
-  type = list(string)
-}
-variable "instance_names" {
-  type = list(string)
-}
-variable "floating_ip_existing" {
-  default = "129.114.25.100"
-}
-variable "floating_ip_pool" {}
-
-data "openstack_networking_network_v2" "private_net" {
-  name = "private"
-}
-
-data "openstack_networking_network_v2" "shared_net" {
-  name = "sharednet1"
-}
-
-data "openstack_networking_subnet_v2" "private_subnet" {
-  name = "private-subnet"
-}
-
-resource "openstack_networking_port_v2" "private_port" {
-  count          = 3
-  name           = "project35-port-${count.index}"
-  network_id     = data.openstack_networking_network_v2.private_net.id
-
-  fixed_ip {
-    ip_address = var.private_fixed_ips[count.index]
-    subnet_id  = data.openstack_networking_subnet_v2.private_subnet.id
-  }
-
-  admin_state_up        = true
+resource "openstack_networking_network_v2" "private_net" {
+  name                  = "private-net-mlops-${var.suffix}"
   port_security_enabled = false
 }
 
-resource "openstack_networking_port_v2" "shared_port" {
-  count          = 3
-  name           = "sharednet-port-${count.index}"
-  network_id     = data.openstack_networking_network_v2.shared_net.id
-  admin_state_up = true
+resource "openstack_networking_subnet_v2" "private_subnet" {
+  name       = "private-subnet-mlops-${var.suffix}"
+  network_id = openstack_networking_network_v2.private_net.id
+  cidr       = "192.168.1.0/24"
+  no_gateway = true
 }
 
-resource "openstack_compute_instance_v2" "vm_instance" {
-  count          = 3
-  name           = var.instance_names[count.index]
-  image_name     = var.image_name
-  flavor_name    = var.flavor_name
-  key_pair       = var.key_pair
-  security_groups = var.security_groups
+resource "openstack_networking_port_v2" "private_net_ports" {
+  for_each              = var.nodes
+  name                  = "port-${each.key}-mlops-${var.suffix}"
+  network_id            = openstack_networking_network_v2.private_net.id
+  port_security_enabled = false
 
-  network {
-    port = openstack_networking_port_v2.private_port[count.index].id
-  }
-
-  network {
-    port = openstack_networking_port_v2.shared_port[count.index].id
+  fixed_ip {
+    subnet_id  = openstack_networking_subnet_v2.private_subnet.id
+    ip_address = each.value
   }
 }
 
-# Associate ONLY node1 (index 0) with the floating IP
-resource "openstack_networking_floatingip_associate_v2" "fip_assoc_node1" {
-  floating_ip = var.floating_ip_existing
-  port_id     = openstack_networking_port_v2.shared_port[0].id
+# Only node1 gets a sharednet2 port
+resource "openstack_networking_port_v2" "sharednet2_port_node1" {
+  name       = "sharednet2-node1-mlops-${var.suffix}"
+  network_id = data.openstack_networking_network_v2.sharednet2.id
+
+  security_group_ids = [
+    data.openstack_networking_secgroup_v2.my_sec_group.id
+  ]
+}
+
+resource "openstack_compute_instance_v2" "nodes" {
+  for_each = var.nodes
+
+  name        = "${each.key}-mlops-${var.suffix}"
+  image_name  = "CC-Ubuntu24.04"
+  flavor_name = "m1.medium"
+  key_pair    = var.key
+
+  dynamic "network" {
+    for_each = each.key == "node1" ? [1] : []
+    content {
+      port = openstack_networking_port_v2.sharednet2_port_node1.id
+    }
+  }
+
+  network {
+    port = openstack_networking_port_v2.private_net_ports[each.key].id
+  }
+
+  user_data = <<-EOF
+    #!/bin/bash
+    echo "127.0.1.1 ${each.key}-mlops-${var.suffix}" >> /etc/hosts
+    su cc -c /usr/local/bin/cc-load-public-keys
+  EOF
+}
+
+resource "openstack_networking_floatingip_v2" "floating_ip" {
+  pool        = "public"
+  description = "MLOps IP for ${var.suffix}"
+  port_id     = openstack_networking_port_v2.sharednet2_port_node1.id
 }
