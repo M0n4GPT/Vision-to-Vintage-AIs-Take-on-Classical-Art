@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+data/metrics/*
+data/styles/*
+!data/metrics/.gitkeep
+!data/styles/.gitkeep
+logs/*
+!logs/.gitkeep
+tfhub_cache/*
+!tfhub_cache/.gitkeep
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow runs
+mlruns/
+mlruns.db
+
+# Uploaded files (if you store user uploads)
+serving/uploads/
+
+# Jupyter/IPython
+.ipynb_checkpoints/
+
+# MLflow
+.mlflow.pid
+
+# Logs
+*.log
+
+# Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Model files
+*.h5
+*.pt
+*.pth
+*.onnx
+*.pb

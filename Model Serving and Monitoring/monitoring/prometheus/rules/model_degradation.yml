@@ -1,0 +1,38 @@
+groups:
+  - name: model_degradation_alerts
+    rules:
+      - alert: ModelAccuracyDegradation
+        expr: |
+          (
+            rate(model_predictions_total{status="success"}[1h]) /
+            rate(model_predictions_total[1h])
+          ) < 0.95
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model accuracy has degraded below 95% threshold"
+          description: "Model accuracy has been below 95% for the last hour"
+
+      - alert: HighPredictionLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(model_prediction_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model prediction latency is high"
+          description: "95th percentile of prediction latency is above 2 seconds"
+
+      - alert: DataDriftDetected
+        expr: |
+          abs(
+            rate(model_feature_drift_score[1h]) - 
+            rate(model_feature_drift_score[1h] offset 24h)
+          ) > 0.1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Significant data drift detected"
+          description: "Feature distribution has changed significantly in the last hour compared to 24h ago" 

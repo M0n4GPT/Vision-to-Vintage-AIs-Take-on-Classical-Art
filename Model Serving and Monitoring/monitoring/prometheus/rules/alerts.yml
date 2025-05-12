@@ -1,0 +1,49 @@
+groups:
+  - name: fastapi_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}% for the last 5 minutes"
+
+      - alert: HighLatency
+        expr: rate(http_request_duration_seconds_sum[5m]) / clamp_min(rate(http_request_duration_seconds_count[5m]), 1) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected"
+          description: "Average request latency is {{ $value }}s for the last 5 minutes"
+
+      - alert: TooManyRequestsInProgress
+        expr: http_requests_in_progress > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many requests in progress"
+          description: "{{ $value }} requests are currently in progress" 
+
+  - name: drift_alerts
+    rules:
+      - alert: SignificantDriftDetected
+        expr: rate(drift_events_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Significant data drift detected"
+          description: "Data drift event rate is {{ $value }}/s. Retraining or investigation may be needed."
+
+      - alert: HighAverageDriftScore
+        expr: avg_over_time(drift_test_stat_bucket{le="+Inf"}[5m]) > 0.6
+        for: 10m
+        labels:
+          severity: notice
+        annotations:
+          summary: "Average drift score is elevated"
+          description: "The average drift test statistic over the last 5 minutes is {{ $value }}." 

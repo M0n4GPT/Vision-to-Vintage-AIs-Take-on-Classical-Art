@@ -1,0 +1,72 @@
+[
+  {
+    "id": "claude_monet_impression_sunrise",
+    "name": "Claude Monet - Impression Sunrise",
+    "artist": "Claude Monet",
+    "file": "Claude_Monet,Impression_Sunrise.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Claude_Monet,Impression_Sunrise.jpg"
+  },
+  {
+    "id": "jean-auguste_dominique_ingres_la_grande_odalisque",
+    "name": "Jean-Auguste Dominique Ingres - La grande odalisque",
+    "artist": "Jean-Auguste Dominique Ingres",
+    "file": "Jean-Auguste_Dominique_Ingres,La_grande_odalisque.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Jean-Auguste_Dominique_Ingres,La_grande_odalisque.jpg"
+  },
+  {
+    "id": "henri_matisse_dance",
+    "name": "Henri Matisse - dance",
+    "artist": "Henri Matisse",
+    "file": "Henri_Matisse,dance.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Henri_Matisse,dance.jpg"
+  },
+  {
+    "id": "vincent_van_gogh_the_starry_night",
+    "name": "Vincent van Gogh - The Starry Night",
+    "artist": "Vincent van Gogh",
+    "file": "Vincent_van_Gogh,The_Starry_Night.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Vincent_van_Gogh,The_Starry_Night.jpg"
+  },
+  {
+    "id": "edvard_munch_the_scream",
+    "name": "Edvard Munch - The Scream",
+    "artist": "Edvard Munch",
+    "file": "Edvard_Munch,The_Scream.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Edvard_Munch,The_Scream.jpg"
+  },
+  {
+    "id": "pablo_picasso_le_reve",
+    "name": "Pablo Picasso - Le reve",
+    "artist": "Pablo Picasso",
+    "file": "Pablo_Picasso,Le_reve.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Pablo_Picasso,Le_reve.jpg"
+  },
+  {
+    "id": "leonardo_da_vinci_mona_lisa",
+    "name": "Leonardo da Vinci - Mona Lisa",
+    "artist": "Leonardo da Vinci",
+    "file": "Leonardo_da_Vinci,Mona_Lisa.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Leonardo_da_Vinci,Mona_Lisa.jpg"
+  },
+  {
+    "id": "piet_mondriaan_composition_in_red__blue__and_yellow",
+    "name": "Piet Mondriaan - Composition in Red, Blue, and Yellow",
+    "artist": "Piet Mondriaan",
+    "file": "Piet_Mondriaan,Composition_in_Red,_Blue,_and_Yellow.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Piet_Mondriaan,Composition_in_Red,_Blue,_and_Yellow.jpg"
+  },
+  {
+    "id": "johannes_vermeer_girl_with_a_pearl_earring",
+    "name": "Johannes Vermeer - Girl with a Pearl Earring",
+    "artist": "Johannes Vermeer",
+    "file": "Johannes_Vermeer,Girl_with_a_Pearl_Earring.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Johannes_Vermeer,Girl_with_a_Pearl_Earring.jpg"
+  },
+  {
+    "id": "michelangelo_creation_of_adam",
+    "name": "Michelangelo - Creation of Adam",
+    "artist": "Michelangelo",
+    "file": "Michelangelo,Creation_of_Adam.jpg",
+    "path": "/Users/aryamandev/MLOps_final/Vision-to-Vintage-AIs-Take-on-Classical-Art-1/Model Serving and Monitoring/data/styles/Michelangelo,Creation_of_Adam.jpg"
+  }
+]

@@ -1,0 +1,192 @@
+{
+  "timestamp": "2025-05-07T20:25:41.009681",
+  "scenarios": [
+    {
+      "name": "basic_functionality",
+      "results": {
+        "status_code": 500,
+        "latency": 0.021921873092651367,
+        "style": "starry_night",
+        "image_size": [
+          224,
+          224
+        ],
+        "success": false
+      }
+    },
+    {
+      "name": "different_image_sizes",
+      "results": [
+        {
+          "status_code": 500,
+          "latency": 0.0058841705322265625,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.01141500473022461,
+          "style": "starry_night",
+          "image_size": [
+            512,
+            512
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.03914809226989746,
+          "style": "starry_night",
+          "image_size": [
+            1024,
+            1024
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.08412384986877441,
+          "style": "starry_night",
+          "image_size": [
+            2048,
+            2048
+          ],
+          "success": false
+        }
+      ]
+    },
+    {
+      "name": "all_styles",
+      "results": [
+        {
+          "status_code": 400,
+          "latency": 0.002235889434814453,
+          "style": "styles",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        }
+      ]
+    },
+    {
+      "name": "concurrent_requests",
+      "results": [
+        {
+          "status_code": 500,
+          "latency": 0.005935192108154297,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.006350040435791016,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.008069753646850586,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.010330677032470703,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.010535001754760742,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.01032710075378418,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.010483026504516602,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.010853052139282227,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.010543107986450195,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        },
+        {
+          "status_code": 500,
+          "latency": 0.009804964065551758,
+          "style": "starry_night",
+          "image_size": [
+            224,
+            224
+          ],
+          "success": false
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_requests": 15,
+    "successful_requests": 0,
+    "success_rate": 0.0,
+    "average_latency": 0,
+    "median_latency": 0,
+    "p95_latency": 0,
+    "p99_latency": 0
+  }
+}

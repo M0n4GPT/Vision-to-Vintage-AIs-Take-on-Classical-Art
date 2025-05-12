@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Enable verbose output
+set -x
+
+# Function to run unit tests
+run_unit_tests() {
+    echo "Running unit tests..."
+    source ../venv/bin/activate
+    pytest tests/
+}
+
+# Function to run load tests
+run_load_tests() {
+    echo "Running load tests..."
+    source ../venv/bin/activate
+    python tests/load_test.py
+}
+
+# Function to run all tests
+run_all_tests() {
+    echo "Running all tests..."
+    run_unit_tests
+    run_load_tests
+}
+
+# Main script logic
+case "$1" in
+    "unit")
+        run_unit_tests
+        ;;
+    "load")
+        run_load_tests
+        ;;
+    "all")
+        run_all_tests
+        ;;
+    *)
+        echo "Usage: $0 {unit|load|all}"
+        exit 1
+        ;;
+esac 

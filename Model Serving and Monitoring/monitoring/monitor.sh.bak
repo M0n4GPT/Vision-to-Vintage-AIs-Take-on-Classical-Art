@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+MONITORING_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+setup_grafana() {
+    echo -e "${GREEN}Setting up Grafana...${NC}"
+    
+    # Create necessary directories
+    mkdir -p "$MONITORING_DIR/grafana/provisioning/datasources"
+    mkdir -p "$MONITORING_DIR/grafana/provisioning/dashboards"
+    
+    # Create datasource configuration
+    cat > "$MONITORING_DIR/grafana/provisioning/datasources/datasources.yml" << EOF
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "5s"
+EOF
+
+    # Create dashboard configuration
+    cat > "$MONITORING_DIR/grafana/provisioning/dashboards/dashboards.yml" << EOF
+apiVersion: 1
+providers:
+  - name: 'Vision-to-Vintage'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+EOF
+}
+
+case "$1" in
+    start)
+        echo -e "${GREEN}Starting monitoring services...${NC}"
+        cd "$MONITORING_DIR"
+        
+        # Setup Grafana configuration
+        setup_grafana
+        
+        # Stop existing containers and remove volumes
+        docker-compose -f docker-compose.monitoring.yml down
+        docker volume rm monitoring_grafana_data monitoring_prometheus_data 2>/dev/null || true
+        
+        # Start services
+        docker-compose -f docker-compose.monitoring.yml up -d
+        
+        # Wait for services to be ready
+        echo -e "${GREEN}Waiting for services to be ready...${NC}"
+        sleep 10
+        
+        echo -e "${GREEN}Monitoring services started!${NC}"
+        echo -e "${BLUE}Access Prometheus at: ${NC}http://localhost:9090"
+        echo -e "${BLUE}Access Grafana at: ${NC}http://localhost:3000 (admin/admin)"
+        ;;
+    stop)
+        echo -e "${GREEN}Stopping monitoring services...${NC}"
+        cd "$MONITORING_DIR"
+        docker-compose -f docker-compose.monitoring.yml down
+        echo -e "${GREEN}Monitoring services stopped!${NC}"
+        ;;
+    status)
+        echo -e "${GREEN}Checking monitoring services status...${NC}"
+        docker ps | grep -E 'prometheus|grafana'
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status}"
+        exit 1
+        ;;
+esac 

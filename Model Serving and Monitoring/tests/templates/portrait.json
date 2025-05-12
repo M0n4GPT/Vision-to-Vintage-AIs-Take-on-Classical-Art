@@ -1,0 +1,10 @@
+{
+    "name": "portrait",
+    "image_path": "portrait.jpg",
+    "style": "starry_night",
+    "min_psnr": 18.0,
+    "min_ssim": 0.45,
+    "max_style_loss": 1500.0,
+    "max_content_loss": 1000.0,
+    "description": "Template for evaluating portrait style transfer performance"
+} 

@@ -1,0 +1,10 @@
+{
+    "name": "landscape",
+    "image_path": "landscape.jpg",
+    "style": "monet",
+    "min_psnr": 19.0,
+    "min_ssim": 0.48,
+    "max_style_loss": 1200.0,
+    "max_content_loss": 800.0,
+    "description": "Template for evaluating landscape style transfer performance"
+} 
