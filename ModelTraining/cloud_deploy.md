@@ -1,5 +1,5 @@
 
-# Cloud Computing on Chameleon project35
+# Cloud Computing on Chameleon project35 -- Start the web application
 Style Transfer Web Service Deployment on Chameleon
 
 ## Completed Tasks
@@ -190,14 +190,15 @@ The source code for our web application is at: [M0n4GPT/vision-to-vintage](https
 git clone https://github.com/M0n4GPT/vision-to-vintage vision-to-vintage
 ```
 
-The repository includes the following materials:
+The repository has two folder, open the /web/ folder, it includes the following materials:
 
 ```
   -   uploads/
   -   static/
   -   templates/
-  -   model.pth
+  -   models/
   -   app.py
+  -   app_torch.py
   -   requirements.txt
   -   Dockerfile
 ```
@@ -208,7 +209,7 @@ where
 
 - `static` and `templates` are directories containing the HTML, CSS, and JavaScript files used to implement the front-end interface.
 - `uploads/` is the folder where user-uploaded content images and generated stylized images are stored temporarily.
-- `model.pth` is the trained TensorFlow style transfer model checkpoint.
+- `models/` include different versions of the trained style transfer model checkpoint.
 - `app.py` implements the Flask web application that serves the model and handles image processing.
 - `requirements.txt` specifies the Python packages required to run the application.
 - `Dockerfile` provides the build instructions for containerizing the entire web application using Docker.
@@ -218,7 +219,7 @@ Use this file to build a container image as follows: we run
 
 ```bash
 # run on node1 host
-docker build -t vision-to-vintage-app:0.0.1 vision-to-vintage
+docker build -t vision-to-vintage-app:0.0.1 vision-to-vintage/web
 ```
 
 which builds the image from the directory `vision-to-vintage`, gives the image the name `vision-to-vintage-app`, and gives it the tag `0.0.1` (typically this is a version number).
@@ -226,14 +227,112 @@ Run the container with
 
 ```bash
 # run on node1 host
-docker run -d -p 80:8000 vision-to-vintage-app:0.0.1
+# docker run -d -p 80:8000 vision-to-vintage-app:0.0.1
+docker run -d   --name vision_app   -p 9090:9090   --restart=always   --memory=2g   vision-to-vintage-app:0.0.1
 ```
 
 Put
 
 ```
-http://129.114.25.100
+http://129.114.25.100:9090
 ```
 
 in the address bar of any browser and try the service.
 
+##  Model Overview
+
+| Model Name          | Style Classes | Training Method         | GPU Usage    |
+|---------------------|---------------|--------------------------|--------------|
+| `stylizer10_ddp.pt` | 10            | DDP  | 2 GPUs       |
+| `stylizer50_6.pt`   | 50            | Single-GPU               | 1 GPU        |
+| `stylizer50_7.pt`   | 50            | DDP                      | 2 GPUs       |
+
+---
+
+##  Model Architecture
+
+All three models share the same architecture based on [VGG19](https://arxiv.org/abs/1409.1556) for encoding and a custom decoder. The overall structure is:
+
+###  Encoder
+- Based on pretrained `torchvision.models.vgg19.features`
+- Frozen during training
+
+###  AdaIN Layer
+Adaptive Instance Normalization is applied to blend the content and style feature maps:
+```python
+t = (c_feat - mean(c_feat)) / std(c_feat) * std(s_feat) + mean(s_feat)
+```
+### Decoder
+```python
+Sequential(
+    Conv2d(512, 256, kernel_size=3, padding=1), ReLU(),
+    Upsample(scale_factor=2),
+    Conv2d(256, 128, kernel_size=3, padding=1), ReLU(),
+    Upsample(scale_factor=2),
+    Conv2d(128, 64,  kernel_size=3, padding=1), ReLU(),
+    Upsample(scale_factor=2),
+    Conv2d(64, 32,   kernel_size=3, padding=1), ReLU(),
+    Upsample(scale_factor=2),
+    Upsample(scale_factor=2),
+    Conv2d(32, 3,    kernel_size=3, padding=1)
+)
+```
+
+
+
+## Issue with VM and the solution
+
+After the VM instance running for a few hours(43327.034081seconds/~12 hours), the VM encountered serious disk I/O errors. The filesystem was remounted as read-only, and services like SSH stopped working.
+The log file looks something like this:
+
+
+<div style="max-height:250px; overflow-y:auto; background:#f6f8fa; padding:10px; border:1px solid #ddd; border-radius:5px;">
+
+<pre><code>
+<14>Apr 25 07:39:05 cloud-init: #############################################################
+<14>Apr 25 07:39:05 cloud-init: -----BEGIN SSH HOST KEY FINGERPRINTS-----
+<14>Apr 25 07:39:05 cloud-init: 256 SHA256:16MkCkZ9CfTzudwh8y17xAh3uxM/D9nl+hinR1DmKRU root@node1-project35 (ECDSA)
+<14>Apr 25 07:39:05 cloud-init: 256 SHA256:Jt9NeGm6TddYWpqJf8Ag9ozBTxRoCb/NNJZHK5lPpqs root@node1-project35 (ED25519)
+<14>Apr 25 07:39:05 cloud-init: 3072 SHA256:3oEee04Zjyz8YuqhqN6y9FZ7qXapo/oO8gfux+P7xA8 root@node1-project35 (RSA)
+<14>Apr 25 07:39:05 cloud-init: -----END SSH HOST KEY FINGERPRINTS-----
+<14>Apr 25 07:39:05 cloud-init: #############################################################
+-----BEGIN SSH HOST KEY KEYS-----
+ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDIhQbwEc2peFU6RewnLj0Q5eAQB8h9FkFQID5zFGuQofMTMEm2wB2f+QEQDYLD9P5scCOCbUjCcjPzL0TxLZJs= root@node1-project35
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILygpX+5llSnaPPNK4z6bAx8zqdTbHcceXlLENa+C1YY root@node1-project35
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDMzGmXK6frG2G4jhTxVNi7U18d/JWXeVqoaBpa55aVVWgsIxS2R3u9CjS60YntVXs+Ht5iqRsm4oJdZ0ixtUhZ9GCafq1mGrOBLGRx45dLNZw7mjkuXVcrQ0zHvWfaCcbUFt62fJqXbfBh+DLaX+zFH3lEiPvOyrjNggWC7szAe+sspO/cZJIa5H/Tgja4UEVl29V3PGvRtGPYG9GwUMpaKGc3abkNsQaI27+KBO9mOQcBDQtBLDWpvxpn1DHcFgw7V+AM91qYIDj6LLyZWZZaGOkoVbUqqW0j0kB6oUWOcVQp8HuVxnhfM4Q8YKMFkOcEv0V/LLKupWC7zxoQh7gOb6c1QHOYnNMtLMjzpxAys8ISumHbpVOe4noL/TtFN2XY2A9UsEUnX0kYy1dF3E98+zFLiYT7XWfxIlPlxsIeti4cfzuuvz7CdEMFIzjDG2ymOiDgV1/pqdUoLEfdGZXY97DZBzR2RiU6K12z4HYuPuMh1yPyMFl9CPOmk8tKiAk= root@node1-project35
+-----END SSH HOST KEY KEYS-----
+[   31.830950] cloud-init[1276]: Cloud-init v. 24.3.1-0ubuntu0~24.04.2 finished at Fri, 25 Apr 2025 07:39:05 +0000. Datasource DataSourceOpenStackLocal [net,ver=2].  Up 31.82 seconds
+[43327.034081] I/O error, dev vda, sector 5650768 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
+[43327.038279] Aborting journal on device vda3-8.
+[43327.039611] EXT4-fs error (device vda3): ext4_journal_check_start:84: comm rs:main Q:Reg: Detected aborted journal
+[43327.039635] EXT4-fs error (device vda3): ext4_journal_check_start:84: comm systemd-journal: Detected aborted journal
+[43327.047046] I/O error, dev vda, sector 5601280 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
+[43327.048365] Buffer I/O error on dev vda3, logical block 557056, lost sync page write
+[43327.049578] JBD2: I/O error when updating journal superblock for vda3-8.
+[43327.054271] I/O error, dev vda, sector 1144832 op 0x1:(WRITE) flags 0x3800 phys_seg 1 prio class 0
+[43327.055824] Buffer I/O error on dev vda3, logical block 0, lost sync page write
+[43327.057015] EXT4-fs (vda3): I/O error while writing superblock
+[43327.057081] EXT4-fs (vda3): previous I/O error to superblock detected
+[43327.057947] EXT4-fs (vda3): Remounting filesystem read-only
+[43327.064223] I/O error, dev vda, sector 1144832 op 0x1:(WRITE) flags 0x3800 phys_seg 1 prio class 0
+[43327.065879] Buffer I/O error on dev vda3, logical block 0, lost sync page write
+[43327.067285] EXT4-fs (vda3): I/O error while writing superblock
+[70910.964530] systemd-journald[300]: Failed to rotate /var/log/journal/b3e723676cd4458880f8165504d6f386/system.journal: Read-only file system
+[70910.966747] systemd-journald[300]: Failed to rotate /var/log/journal/b3e723676cd4458880f8165504d6f386/user-1000.journal: Read-only file system
+[70910.968331] systemd-journald[300]: Failed to write entry to /var/log/journal/b3e723676cd4458880f8165504d6f386/system.journal (23 items, 836 bytes) despite vacuuming, ignoring: Input/output error
+[70931.158691] systemd-journald[300]: Failed to rotate /var/log/journal/b3e723676cd4458880f8165504d6f386/system.journal: Read-only file system
+[70931.162183] systemd-journald[300]: Failed to write entry to /var/log/journal/b3e723676cd4458880f8165504d6f386/system.journal (23 items, 705 bytes) despite vacuuming, ignoring: Input/output error
+[70985.356020] systemd-journald[300]: Failed to rotate /var/log/journal/b3e723676cd4458880f8165504d6f386/system.journal: Read-only file system (Dropped 41 similar message(s))
+[70985.360192] systemd-journald[300]: Failed to rotate /var/log/journal/b3e723676cd4458880f8165504d6f386/user-1000.journal: Read-only file system
+[70985.363645] systemd-journald[300]: Failed to write entry to /var/log/journal/b3e723676cd4458880f8165504d6f386/system.journal (23 items, 705 bytes) despite vacuuming, ignoring: Input/output error (Dropped 20 similar message(s))
+</code></pre>
+
+</div>
+
+It's because of the outage at KVM@TACC specifically related to block storage/hard disks. After the issue was resolved, rebooting the VM instance, and restart by:
+```bash
+# run on node1 host
+# docker run -d -p 80:8000 vision-to-vintage-app:0.0.1
+docker run -d   --name vision_app   -p 9090:9090   --restart=always   --memory=2g   vision-to-vintage-app:0.0.1
+```
+The service should now be running normally.
