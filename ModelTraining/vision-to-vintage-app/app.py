@@ -2,6 +2,10 @@ import os
 import time
 import random
 
+
+PRODUCTION_DIR = "/mnt/object/production data"
+os.makedirs(PRODUCTION_DIR, exist_ok=True)
+
 from flask import (
     Flask, request,
     render_template, send_from_directory
@@ -17,7 +21,7 @@ from PIL import Image
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 STYLE_DIR     = os.path.join(BASE_DIR, 'style')
-HUB_URL      = "https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2"
+HUB_URL      = HUB_URL = "/app/tfhub_models/arbitrary-style"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # os.makedirs(STYLE_DIR,    exist_ok=True)
@@ -27,6 +31,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 #  LOAD TF‑HUB MODEL 
 hub_model = hub.load(HUB_URL)
+
 
 #  HELPERS 
 def load_img(path, max_dim=512):
@@ -55,6 +60,10 @@ def parse_style_name(style_path):
     author, title = fn.split(",", 1)
     return title, author
 
+
+
+
+
 # ROUTES 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -70,6 +79,15 @@ def index():
     filename     = secure_filename(file.filename)
     content_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(content_path)
+
+    import shutil
+    from datetime import datetime
+    
+    # Save to object store production folder
+    timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
+    prod_filename = f"{timestamp}_{filename}"
+    shutil.copy(content_path, os.path.join(PRODUCTION_DIR, prod_filename))
+
 
     # list of all possible authors
     ALL_AUTHORS = [
@@ -107,6 +125,8 @@ def index():
     out_filename = f"stylized_{filename}"
     out_path     = os.path.join(app.config["UPLOAD_FOLDER"], out_filename)
     out_img.save(out_path)
+
+
 
     # parse for display
     title, author = parse_style_name(style_path)
@@ -149,4 +169,4 @@ def uploaded_file(filename):
 # MAIN 
 if __name__ == "__main__":
     # debug=False in production
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=9090, debug=True)

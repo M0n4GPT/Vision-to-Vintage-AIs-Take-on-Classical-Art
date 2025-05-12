@@ -227,6 +227,7 @@ Run the container with
 ```bash
 # run on node1 host
 docker run -d -p 80:8000 vision-to-vintage-app:0.0.1
+# docker run -d   --name vision_app   -p 9090:9090   --restart=always   --memory=2g   vision-to-vintage-app:0.0.1
 ```
 
 Put

@@ -1,122 +1,180 @@
-# Continuous X Proposal  
-*(Unit 3: Continuous Integration, Continuous Delivery, and Continuous Training)*
+# Vision to Vintage: Continuous X (DevOps)
+
+Welcome to the DevOps module of our project **Vision to Vintage: AI's Take on Classical Art**. This guide walks you through the infrastructure, automation, and deployment pipeline implemented for this system, following the lifecycle from provisioning to production. All files referenced are located in the [`Continuous_X/`](./Continuous_X/) directory of this repository.
 
 ---
 
-## Overview
+## 📁 Project File Structure (within Continuous_X/)
 
-This section outlines our approach to **Continuous Integration (CI)**, **Continuous Delivery (CD)**, and **Continuous Training (CT)** for the *Vision to Vintage* project.  
-We implement fully automated pipelines to ensure fast iteration, safe deployments, and continuous model improvements based on real-world data, following industry-standard MLOps practices.
-
-Our Continuous X system covers:
-- Infrastructure-as-Code (IaC)
-- Cloud-native service deployment
-- CI/CD pipelines for service promotion
-- Automated model retraining based on monitoring feedback
-
-All infrastructure and workflows are hosted on **Chameleon Cloud** and managed via **GitHub Actions**, **Terraform**, and **Kubernetes**.
-
----
-
-## Infrastructure-as-Code (IaC)
-
-- All infrastructure configurations are managed declaratively and stored in GitHub.
-- **Terraform** is used for resource provisioning on Chameleon Cloud.
-- **Kubernetes** manifests define service deployments (model serving API, ETL pipeline, monitoring services).
-- **Immutable Infrastructure**: No manual changes to deployed instances; updates occur through Git and automated pipelines.
-- **Containerization**: All services (FastAPI API, data pipelines, dashboards) are Dockerized for portable and versioned deployment.
+```
+Continuous_X/
+├── ansible/                      # Ansible playbooks for configuring VMs and installing Kubernetes
+├── kubespray/                   # Kubespray fork for Kubernetes cluster deployment
+├── inventory/                   # Kubespray inventory and group_vars
+├── terraform/                   # Terraform scripts to provision infrastructure on Chameleon
+├── k8s/                         # K8s manifests and service configurations
+└── README.md                    # This guide
+```
 
 ---
 
-## Cloud-Native Architecture
+## 🚀 Step 1: Provision Infrastructure (Terraform)
 
-- **Microservices**: Each service (inference, ETL, dashboard) is deployed independently using Kubernetes.
-- **Containerized Services**: All workloads run in Docker containers orchestrated by Kubernetes.
-- **Auto-scaling**: Kubernetes Horizontal Pod Autoscaler (HPA) dynamically adjusts serving resources.
-- **Immutable Deployments**: New versions are deployed through GitOps workflows with no manual intervention.
+We use **Terraform** to provision 3 bare metal instances on Chameleon Cloud.
 
----
+### Files:
+- [`terraform/`](./Continuous_X/terraform/) — contains `main.tf`, `variables.tf`, and `outputs.tf`
 
-## Continuous Integration (CI)
+### Instructions:
 
-The **GitHub Actions CI pipeline** is triggered on every code push or pull request:
+1. Authenticate with Chameleon OpenStack:
+```bash
+source openrc.sh  # Your Chameleon OpenStack credentials
+```
+2. Initialize and apply Terraform:
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+3. Note down the floating IP and internal IPs from the output. These will be used in Ansible inventory.
 
-1. **Code Testing**:
-   - Run automated unit tests using Pytest to validate new code.
-2. **Build Phase**:
-   - Build Docker images for model serving, data pipeline, and monitoring dashboards.
-3. **Container Registry Push**:
-   - Push built images to a container registry for versioning and deployment.
-4. **Deployment to Staging**:
-   - Deploy services to the **staging** environment using Kubernetes manifests.
-
-This ensures early bug detection, fast feedback, and consistent deployment artifacts.
-
----
-
-## Continuous Delivery (CD)
-
-Our deployment follows a **staged promotion strategy**:
-
-1. **Staging Deployment**:
-   - Deploy updated services to a staging namespace for testing.
-   - Perform automated offline model evaluation and load testing (Locust).
-
-2. **Canary Deployment**:
-   - Use **Istio VirtualService** to route 5% of real traffic to the new service version while 95% goes to the stable version.
-   - Monitor live performance metrics such as P99 latency, throughput, and error rates.
-
-3. **Production Promotion**:
-   - If canary tests pass, promote the new version to full production rollout.
-
-**Rollback Mechanism**:
-- Monitor with **Prometheus**.
-- If P99 latency exceeds 250ms or critical failures are detected, trigger an **automatic rollback** to the previous version.
+> ⚠️ This setup avoids ClickOps by tracking all provisioning in version control.
 
 ---
 
-## Continuous Training (CT)
+## 🛠 Step 2: Configure the VMs with Ansible
 
-We implement **automated model retraining** based on real-world monitoring feedback:
+We automate configuration with **Ansible**, skipping manual installs.
 
-1. **Data Collection**:
-   - Save 10% of production images and user feedback in persistent object storage.
+### Files:
+- [`ansible/pre_k8s_configure.yml`](./Continuous_X/ansible/pre_k8s_configure.yml) — disables firewall, sets Docker daemon
+- [`ansible/inventory.yml`](./Continuous_X/ansible/inventory.yml) — maps IPs and hosts
 
-2. **Model Retraining**:
-   - Trigger retraining jobs on a Ray cluster if:
-     - Model accuracy falls below 60%.
-     - Data drift or model degradation is detected by Evidently AI.
-   - Train using distributed methods like DDP and FSDP to handle large models efficiently.
+### Instructions:
 
-3. **Evaluation and Registration**:
-   - Run offline evaluation tests after retraining.
-   - If models meet quality thresholds, register them in **MLFlow** and deploy to staging.
+1. Set your Ansible config (WSL/Linux terminal):
+```bash
+export ANSIBLE_CONFIG=./ansible/ansible.cfg
+```
 
-4. **Version Control**:
-   - Version all models, artifacts, and training metadata in **MLFlow** for reproducibility.
+2. Verify SSH connectivity:
+```bash
+ansible -i ansible/inventory.yml all -m ping
+```
 
----
-
-## Monitoring Stack
-
-Our monitoring infrastructure includes:
-
-| **Tool** | **Purpose** |
-|:---------|:------------|
-| **Prometheus** | Collects system metrics (latency, resource utilization). |
-| **Grafana** | Visualizes system health, business KPIs, and real-time dashboards. |
-| **MLFlow** | Tracks experiments, model metrics, and artifacts. |
-| **Evidently AI** | Monitors data drift and model degradation. |
-
-These tools provide full observability over system health, model behavior, and data quality.
+3. Run the pre-K8s config:
+```bash
+ansible-playbook -i ansible/inventory.yml ansible/pre_k8s_configure.yml
+```
 
 ---
 
-## Summary
+## ☸️ Step 3: Install Kubernetes with Kubespray
 
-By implementing Continuous Integration, Delivery, and Training, we ensure that the *Vision to Vintage* system is:
+We use a customized fork of **Kubespray** to install a production-ready Kubernetes cluster.
 
-- **Reliable**: Bugs and failures are caught early through CI pipelines.
-- **Scalable**: Auto-scaling microservices manage variable user load.
-- **Adaptable**: Continuous retraining keeps models fresh and aligned with real-world data.
-- **Resilient**: Canary deployments, monitoring, and rollback mechanisms maintain system stability.
+### Files:
+- [`kubespray/`](./Continuous_X/kubespray/) — includes Kubespray roles and playbooks
+- [`inventory/mycluster/hosts.yaml`](./Continuous_X/inventory/mycluster/hosts.yaml)
+- [`group_vars/all.yml`](./Continuous_X/inventory/mycluster/group_vars/all.yml)
+
+### Instructions:
+
+1. Install dependencies:
+```bash
+cd kubespray
+pip install --user -r requirements.txt
+```
+
+2. Edit `hosts.yaml` to reflect your actual VM IPs.
+
+3. Run the installer:
+```bash
+ansible-playbook -i ../inventory/mycluster/hosts.yaml --become cluster.yml
+```
+
+4. On success, use `kubectl` to check cluster:
+```bash
+kubectl get nodes
+```
+
+---
+
+## 🧠 Continuous Training + CI/CD (Outline)
+
+### Tools Used:
+- Argo Workflows for retraining pipelines
+- MLflow for experiment tracking
+- Docker + GitHub Actions for CI/CD (see [`k8s/`](./Continuous_X/k8s/))
+
+> Each training run triggers evaluation, packaging, and deployment to staging.
+
+---
+
+## 🚦 Staged Deployment Architecture
+
+Our cluster supports **3 environments**:
+- `staging` — new models land here first
+- `canary` — exposed to partial traffic for online eval
+- `production` — after passing evaluation
+
+### Promotion Flow:
+1. New model → staging (auto)
+2. Passed offline eval → canary (manual trigger)
+3. Passed live eval → promote to prod (via Helm)
+
+---
+
+## 🔁 Immutable + Cloud-Native Principles
+
+- All infra defined in code (`terraform/`, `ansible/`, `k8s/`)
+- All services containerized in Docker
+- Zero manual configuration after launch
+
+---
+
+## 📦 Running on Your Own Chameleon Account
+
+### Prerequisites:
+- Chameleon OpenStack account
+- Chameleon CLI credentials (`openrc.sh`)
+- SSH key uploaded to Chameleon
+
+### Full Launch Sequence:
+```bash
+# Provision infra
+cd terraform
+terraform apply
+
+# Configure VMs
+cd ../ansible
+ansible-playbook -i inventory.yml pre_k8s_configure.yml
+
+# Deploy K8s
+cd ../kubespray
+ansible-playbook -i ../inventory/mycluster/hosts.yaml --become cluster.yml
+```
+
+Then deploy your services using `kubectl` or `helm`.
+
+---
+
+## 👤 Author: Unit 3 - DevOps
+**Varijaksh Katti (Group 35)**
+
+Responsibilities:
+- Infrastructure-as-Code (Terraform + Ansible)
+- K8s provisioning (Kubespray)
+- CI/CD, automation, and staged deployment strategy
+- Cloud-native compliance
+
+---
+
+## 📎 References
+- [Lab 3 - Build MLOps pipeline (PDF)](../Lab%203%20-%20Build%20MLops%20pipeline.pdf)
+- [Kubespray Docs](https://github.com/kubernetes-sigs/kubespray)
+- [Chameleon Cloud Docs](https://www.chameleoncloud.org/docs/)
+
+---
+

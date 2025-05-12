@@ -1,0 +1,157 @@
+name: artwork-etl
+
+volumes:
+  artwork:
+  
+services:
+  extract-data:
+    container_name: etl_extract_data
+    image: python:3.11
+    user: root
+    volumes:
+      - artwork:/data
+    working_dir: /data
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+
+        echo "Resetting dataset directory..."
+        rm -rf ArtworkRaw images_only
+        mkdir -p ArtworkRaw
+        cd ArtworkRaw
+
+        echo "Downloading dataset zip using curl..."
+        curl -L -o best-artworks-of-all-time.zip https://www.kaggle.com/api/v1/datasets/download/ikarus777/best-artworks-of-all-time
+
+        echo "Unzipping dataset..."
+        unzip -q best-artworks-of-all-time.zip
+        rm -f best-artworks-of-all-time.zip
+
+        echo "Moving only 'images' folder to /data/images_only..."
+        mv images /data/images_only
+        cd ..
+        rm -rf ArtworkRaw
+
+        echo "Listing contents of /data/images_only after extract stage:"
+        ls -l /data/images_only
+
+  transform-data:
+    container_name: etl_transform_data
+    image: python:3.11
+    volumes:
+      - artwork:/data
+    working_dir: /data
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+
+        echo "Installing required libraries..."
+        pip install pillow numpy
+
+        echo "Running transform script..."
+        python3 -c '
+        import os
+        import random
+        import shutil
+        import unicodedata
+        from PIL import Image
+        import numpy as np
+
+        RAW_DIR = "/data/images_only/images"
+        OUT_DIR = "/data/processed"
+        SPLITS = ["train", "val", "test"]
+        SPLIT_RATIOS = [0.7, 0.15, 0.15]
+        TARGET_SIZE = (224, 224)
+
+        if not os.path.exists(RAW_DIR):
+            raise Exception(f"Missing raw data at {RAW_DIR}")
+
+        os.makedirs(OUT_DIR, exist_ok=True)
+
+        # Normalize folder names to handle Unicode inconsistencies
+        for folder_name in os.listdir(RAW_DIR):
+            original_path = os.path.join(RAW_DIR, folder_name)
+            if os.path.isdir(original_path):
+                normalized_name = unicodedata.normalize("NFC", folder_name)
+                normalized_path = os.path.join(RAW_DIR, normalized_name)
+                if original_path != normalized_path:
+                    os.rename(original_path, normalized_path)
+
+        top_level_dirs = [d for d in os.listdir(RAW_DIR) if os.path.isdir(os.path.join(RAW_DIR, d))]
+
+        for artist in top_level_dirs:
+            try:
+                artist_path = os.path.join(RAW_DIR, artist)
+                images = [f for f in os.listdir(artist_path) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
+                random.shuffle(images)
+
+                n_total = len(images)
+                n_train = int(SPLIT_RATIOS[0] * n_total)
+                n_val = int(SPLIT_RATIOS[1] * n_total)
+                n_test = n_total - n_train - n_val
+
+                print(f"Processing artist: {artist} - total images: {n_total}")
+
+                split_map = {
+                    "train": images[:n_train],
+                    "val": images[n_train:n_train+n_val],
+                    "test": images[n_train+n_val:]
+                }
+
+                for split in SPLITS:
+                    split_dir = os.path.join(OUT_DIR, split, artist)
+                    os.makedirs(split_dir, exist_ok=True)
+                    for fname in split_map[split]:
+                        src = os.path.join(artist_path, fname)
+                        dst = os.path.join(split_dir, fname)
+
+                        try:
+                            with Image.open(src) as img:
+                                img = img.convert("RGB")
+                                img = img.resize(TARGET_SIZE)
+                                img.save(dst)
+                        except Exception as e:
+                            print(f"Failed to process image {src}: {e}")
+
+            except Exception as e:
+                print(f"Skipping artist {artist} due to error: {e}")
+        '
+
+        echo "Listing contents of /data/processed after transform stage:"
+        ls -l /data/processed
+
+
+
+  load-data:
+    container_name: etl_load_data
+    image: rclone/rclone:latest
+    volumes:
+      - artwork:/data
+      - ~/.config/rclone/rclone.conf:/root/.config/rclone/rclone.conf:ro
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        if [ -z "$RCLONE_CONTAINER" ]; then
+          echo "ERROR: RCLONE_CONTAINER is not set"
+          exit 1
+        fi
+
+        echo "Cleaning up existing contents of object store container..."
+        rclone delete chi_tacc:$RCLONE_CONTAINER --rmdirs || true
+
+        echo "Uploading processed dataset..."
+        rclone copy /data/processed chi_tacc:$RCLONE_CONTAINER \
+          --progress \
+          --transfers=32 \
+          --checkers=16 \
+          --multi-thread-streams=4 \
+          --fast-list
+
+        echo "Listing directories in container after load stage:"
+        rclone lsd chi_tacc:$RCLONE_CONTAINER
+
