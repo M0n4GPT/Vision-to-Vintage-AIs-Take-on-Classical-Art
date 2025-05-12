@@ -44,11 +44,7 @@ Before running any steps in this guide, make sure your local development environ
 - **OpenStack CLI tools**: for authenticating with Chameleon  
   Requires sourcing the `openrc.sh` file available from your Chameleon Dashboard
 
-Optional (but recommended):
-- **Argo CLI**: for interacting with Argo Workflows  
-  Installation: https://argo-workflows.readthedocs.io/en/stable/cli_installation/
-
-Ensure your SSH key is uploaded to Chameleon and available locally.
+- Ensure your SSH key is uploaded to Chameleon and available locally.
 
 ---
 
