@@ -129,10 +129,4 @@ This separation allows for safe promotion and rollback mechanisms using Helm and
 - CI/CD orchestration using Argo Workflows *(in progress)*  
 - Enabling GitOps and staged deployment *(to be finalized)*
 
----
 
-## References
-- Lab 3: MLOps Pipeline (PDF)  
-- Kubespray GitHub: https://github.com/kubernetes-sigs/kubespray  
-- Argo Workflows Docs: https://argo-workflows.readthedocs.io  
-- Chameleon Cloud Docs: https://www.chameleoncloud.org/docs/
