@@ -1,240 +1,246 @@
 
-# Cloud Computing on Chameleon project35
-Style Transfer Web Service Deployment on Chameleon
+# Using Ray Train
 
-## Completed Tasks
-
-- Successfully created and configured a VM on Chameleon (KVM@TACC site).
-- Floating IP has been allocated and SSH access to the VM has been confirmed.
-- Docker has been installed on the VM.
-- Project source code cloned into the VM from GitHub.
-- Dockerfile has been created and tested to package the style transfer web app.
-
-
-## Implementation Details
-
-* **Compute resources**: one virtual machine instances.
-* **Network resources**: 
-  * the VM is attached to an Internet-connected network.
-  * the VM is also be attached to a "private" network that we provision, on which the virtual machine instances can communicate with one another. We use the subnet on this network: 192.168.1.0/24. 
-  * We get a publicly routable "floating IP: 129.114.25.100" address for one of the VM instances.
-
-
-###  Provision resources using the GUI
-
-I provisioned resources using the OpenStack graphical user interface, which is called Horizon, to provision our resources. Click "Experiment" > "KVM@TACC"
-
-On the left side of the interface, expand the "Network" menu
-* Choose the "Networks" option
-* our private network is named as "private_cloud_net_project35" on the list.
-
-Creating details:
-
-* On the first ("Network") tab, specify the network name as <code>private_cloud_net_project35</code> . Leave other settings at their defaults, and click "Next".
-* On the second ("Subnet") tab, specify the subnet name as <code>private_cloud_subnet_project35</code> . Specify the subnet address as `192.168.1.0/24`. Check the "Disable gateway" box. Leave other settings at their defaults, and click "Next".
-* On the third ("Subnet Details") tab, leave all settings at their default values. Click "Create".
-
-### Provision a port on our "private" network
-
-Create a port on our "private" network, and later we will attach a compute instance to it. Creating details:
-
-* On the left side of the interface, expand the "Network" menu
-* Choose the "Networks" option
-* Click on the <code>private_cloud_subnet_project35</code> network created earlier.
-* Choose the "Ports" tab from the options on the top.
-* Click "Create Port".
-
-I've set up the port as follows:
-
-* Leave "Name" blank
-* In the "Specify IP address or subnet" menu, choose "Fixed IP address"
-* Then, in the "Fixed IP Address" field, put `192.168.1.11`
-* Un-check the box next to "Port Security"
-* Leave other settings at their default values
-* Click "Create".
-
-### Provision the VM instance
-
-* On the left side of the interface, expand the "Compute" menu
-* Choose the "Instances" option
-* Our Instance is named as "node1-project35" on the list
-
-Creating details:
-
-* On the first ("Details") tab, set the instance name to  <code>node1-project35</code> . Leave other settings at their default values, and click "Next".
-* In the second ("Source") tab, choose `CC-Ubuntu24.04`. Click "Next".
-* In the third ("Flavor") tab, use `m1.medium` . Click "Next".
-* In the fourth ("Networks") tab, we will attach the instance to a network provided by the infrastructure provider which is connected to the Internet.
-  * From the "Available" list, click on the arrow next to `sharednet1`. It will appear as item 1 in the "Allocated" list. 
-  * Click "Next".
-* In the fifth ("Ports") tab, use the port we just created to attach the instance to the private network we created earlier. 
-  * From the "Available" list, find the port you created earlier. 
-  * Click "Next".
-* In the sixth ("Security Groups") tab, `allow-ssh` and `allow-http-80`
-  * Click "Next".
-* In the seventh ("Key Pair") tab, find the SSH key associated with our laptop on the "Available" list. Named as "`id_rsa_chameleon_35`" Click on the arrow next to it to move it to the "Allocated" section. 
-* In the eighth ("Customization") tab, paste the following into the text input field:
-
-```
-#cloud-config
-runcmd:
-  - echo "127.0.1.1 $(hostname)" >> /etc/hosts
-  - su cc -c /usr/local/bin/cc-load-public-keys
-```
-
-Then "Launch Instance" (the remaining tabs are not required).
-
-
-### Provision a floating IP
-
-I provisioned and attached a "floating IP", our assigned floating ip is: `129.114.25.100` .creating details:
-
-* On the left side of the interface, expand the "Network" menu
-* Choose the "Floating IPs" option
-* Click "Allocate IP to project"
-* In the "Pool" menu, choose "public"
-* In the "Description" field, write: <code>Cloud IP for project35</code>.
-* Click "Allocate IP"
-* Then, choose "Associate" next to "your" IP in the list.
-* In the "Port" menu, choose the port associated with our instance on the `shared1` network, with an IP address of the form `10.56.X.X`.
-* Click "Associate".
-
-
-### Access your instance over SSH
-
-First we have a shared public key(`id_rsa_chameleon_35.pub`) and private key(`id_rsa_chameleon_35`) pair to every group member. The public key was uploaded to everyone's chameleon account on site KVM@TACC, CHI@TACC, and CHI@UC and the private key is saved inside everyone's local folder (`/Users/your-username/.ssh/` in default). 
-
-Now, access the instance over SSH. From local terminal, run
-
-```
-ssh -i ~/.ssh/id_rsa_chameleon_35 cc@129.114.25.100
-```
-
-confirm that you can access the compute instance. Run
-
-```
-hostnamectl
-```
-
-inside this SSH session to see details about the host.
-
-Also, run
-```
-echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
-```
-
-inside the SSH session
-
-
-### Deploy a service in a Docker container
-
-Install a container engine
-
-First, [install the Docker engine](https://docs.docker.com/engine/install/ubuntu/). On `node1`, run
+## Stop MLFlow system
+Stop the MLFlow tracking server and its associated pieces (database, object store) with
 
 ```bash
-# run on node1 host
-sudo apt-get update
-sudo apt-get -y install ca-certificates curl
-
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-
-# Install packages
-sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# run on node-mltrain
+docker compose -f style_transfer/docker/docker-compose-mlflow.yaml down
 ```
-
-Before we can run `docker` commands as an unprivileged user, we need to add the user to the `docker` group:
+and then stop the Jupyter server with
 
 ```bash
-# run on node1 host
-sudo groupadd -f docker; sudo usermod -aG docker $USER
+# run on node-mltrain
+docker stop jupyter
 ```
 
-then, end the SSH session (`exit`) and open a new one for the change to be reflected. 
+## Start the Ray cluster
+### Understand the Ray cluster
 
-Open a new SSH session, run 
+
+- We will operate a Ray cluster with a head node (responsible for scheduling and managing jobs and data, and serving a dashboard), and two worker nodes.
+- For observability, the Ray head node uses [Prometheus](https://prometheus.io/) to collect metrics, and [Grafana](https://grafana.com/) to visualize them in a dashboard.
+- The Ray worker nodes will use the MinIO object store for persistent storage from jobs. We will save model checkpoints in this MinIO storage, so that if a job is interrupted, a new Ray worker can resume from the last checkpoint.
+- In addition to the elements that make up the Ray cluster, we will separately bring up a Jupyter notebook server container, in which we'll submit jobs to the cluster.
+
+
+### Start the Ray cluster - AMD(gpu_mi100) GPUs
+For the Ray experiment, must use a node with two GPUs. Run
 
 ```bash
-# run on node1 host
-id
+# run on nodedocker stop jupyter
+rocm-smi
 ```
+and confirm that you see two GPUs.
 
-can see a  group named `docker` listed in the output, indicating that the `cc` user is part of the `docker` group. 
+First, we're going to build a container image for the Ray worker nodes, with Ray and ROCm installed. Run
 
 ```bash
-# run on node1 host
-docker run hello-world
+# run on node
+docker build -t ray-rocm:2.42.1 -f style_transfer/docker/Dockerfile.ray-rocm .
 ```
 
-see a "Hello from Docker!" message.
+It will take 5-10 minutes to build the container image.
 
-### Build and serve a container for a machine learning model
+You can see this Dockerfile here: [Dockerfile.ray-rocm](https://github.com/M0n4GPT/vision-to-vintage/blob/master/style_transfer/docker/Dockerfile.ray-rocm).
 
-Then I built our own container, and used it to serve our machine learning model.
 
-The premise of this service is: We are developing an online creative platform focused on artistic photo transformations. We are testing a new model you have developed that automatically applies different artistic styles to user-uploaded images, allowing users to transform their photos into artworks inspired by various visual styles. We have built a simple web application with which to test our model and gather feedback from users on the quality of the style transfer results.
-
-The source code for our web application is at: [M0n4GPT/vision-to-vintage](https://github.com/M0n4GPT/vision-to-vintage). Retrieve it on node1 with
+We'll bring up our Ray cluster with Docker Compose. Run:
 
 ```bash
-# run on node1 host
-git clone https://github.com/M0n4GPT/vision-to-vintage vision-to-vintage
+# run on node
+export HOST_IP=$(curl --silent http://169.254.169.254/latest/meta-data/public-ipv4 )
+docker compose -f style_transfer/docker/docker-compose-ray-rocm.yaml up -d
 ```
 
-The repository includes the following materials:
-
-```
-  -   uploads/
-  -   static/
-  -   templates/
-  -   model.pth
-  -   app.py
-  -   requirements.txt
-  -   Dockerfile
-```
+You can see this Docker Compose YAML here: [docker-compose-ray-rocm.yaml](https://github.com/M0n4GPT/vision-to-vintage/blob/master/style_transfer/docker/docker-compose-ray-rocm.yaml).
 
 
-
-where
-
-- `static` and `templates` are directories containing the HTML, CSS, and JavaScript files used to implement the front-end interface.
-- `uploads/` is the folder where user-uploaded content images and generated stylized images are stored temporarily.
-- `model.pth` is the trained TensorFlow style transfer model checkpoint.
-- `app.py` implements the Flask web application that serves the model and handles image processing.
-- `requirements.txt` specifies the Python packages required to run the application.
-- `Dockerfile` provides the build instructions for containerizing the entire web application using Docker.
-
-
-Use this file to build a container image as follows: we run
+When it is finished, the output of 
 
 ```bash
-# run on node1 host
-docker build -t vision-to-vintage-app:0.0.1 vision-to-vintage
+# run on node
+docker ps
 ```
 
-which builds the image from the directory `vision-to-vintage`, gives the image the name `vision-to-vintage-app`, and gives it the tag `0.0.1` (typically this is a version number).
-Run the container with
+should show that the `ray-head`, `ray-worker-0`, and `ray-worker-1` containers are running.
+
+Verify that a GPU is visible to each of the worker nodes.
 
 ```bash
-# run on node1 host
-docker run -d -p 80:8000 vision-to-vintage-app:0.0.1
-# docker run -d   --name vision_app   -p 9090:9090   --restart=always   --memory=2g   vision-to-vintage-app:0.0.1
+# run on node
+docker exec ray-worker-0 "rocm-smi"
 ```
 
-Put
+and
+
+```bash
+# run on node
+docker exec ray-worker-1 "rocm-smi"
+```
+
+### Start a Jupyter container
+
+Start a Jupyter notebook container that does *not* have any GPUs attached. We'll use this container to submit jobs to the Ray cluster.
+
+
+```bash
+# run on node
+docker build -t jupyter-ray -f style_transfer/docker/Dockerfile.jupyter-ray .
+```
+
+Run
+
+```bash
+# run on node
+HOST_IP=$(curl --silent http://169.254.169.254/latest/meta-data/public-ipv4 )
+docker run  -d --rm  -p 8888:8888 \
+    -v ~/style_transfer:/home/jovyan/work/ \
+    -e RAY_ADDRESS=http://${HOST_IP}:8265/ \
+    -e IMG_DATA_DIR=/project35 \
+    --mount type=bind,source=/home/cc/project35,target=/project35,readonly \
+    --name jupyter \
+    jupyter-ray
+```
+
+
+Then, run 
+
+```bash
+# run on node-mltrain
+docker logs jupyter
+```
+
+and look for a line like
 
 ```
-http://129.114.25.100
+http://127.0.0.1:8888/lab?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
-in the address bar of any browser and try the service.
+Paste this into a browser tab, but in place of `127.0.0.1`, substitute the floating IP assigned to your instance, to open the Jupyter notebook interface.
+
+In the file browser on the left side, open the `work` directory.
+
+Open a terminal ("File > New > Terminal") inside the Jupyter server environment, and in this terminal, run
+
+```bash
+# runs on jupyter container inside node-mltrain
+env
+```
+
+to see environment variables. Confirm that the `RAY_ADDRESS` is set, with the correct floating IP address.
+
+### Access Ray cluster dashboard
+
+The Ray head node serves a dashboard on port 8265. In a browser, open
+
+```
+http://A.B.C.D:8265
+```
+
+
+Click on the "Cluster" tab and verify that you see your head node and two worker nodes.
+
+## Submit jobs to the Ray cluster
+
+Now that we have a Ray cluster running, we can use it to specify the resource requirements and runtime environment for a job, and submit it to Ray. 
+
+### Submit a job with no modifications
+
+To start, submit a training job to Ray cluster, without modifying the code of our training job at all.
+
+Open a terminal inside this Jupyter environment ("File > New > New Terminal") and `cd` to the `work` directory. Then, clone the training code.
+
+```bash
+# run in a terminal inside jupyter container
+cd ~/work
+# git clone https://github.com/M0n4GPT/vision-to-vintage/ray
+```
+
+Open `train_ray.py`, and view it directly there.
+
+
+To run it on a worker node, though, we must give Ray some instructions about how to set up the runtime environment on the worker nodes. Two files necessary for this, `requirements.txt` and `runtime.json`, are inside the "work" directory:
+
+* We assume that the worker nodes already have the img dataset at `/project35`, since we attached our data volume to those containers. So we don't have to worry about getting the data to the worker node in this case. We will have to make sure that the environment variable `IMG_DATA_DIR` is set, so that the training script can find the data. (In general, we will need to make sure that either worker nodes have access to the data, or they download it at the beginning of the training job.)
+* We need to make sure that the worker nodes have the Python packages necessary to run our script. We'll put the list of packages in `requirements.txt`.
+* And, we need to direct Ray to run this on a GPU node.
+
+In `runtime.json`:
+
+```json
+{
+    "pip": "requirements.txt",
+    "env_vars": {
+        "IMG_DATA_DIR": "/project35"
+    }
+}
+```
+
+we specify that when setting up a worker node to run our job, Ray should:
+
+* install the Python packages listed in `requirements.txt`
+* and set the `IMG_DATA_DIR` directory.
+
+With this in hand, we can submit our job! In a terminal inside the Jupyter environment, run `pip install "ray[default]"` first, then
+
+
+```bash
+# runs on jupyter container inside node-mltrain, from inside the "work" directory
+ray job submit --runtime-env runtime.json --entrypoint-num-gpus 1 --entrypoint-num-cpus 8 --verbose  --working-dir .  -- python3 train_style_transfer.py \
+    --data_root "$IMG_DATA_DIR" \
+    --global_batch_size 32 \
+    --micro_batch_size 8 \
+    --epochs 5 \
+    --precision fp32 \
+    --strategy none \
+    --export_path ./stylizer.pt
+```
+
+where we pass 
+
+* the runtime environment specification, 
+* the number of GPUs and CPUs our job requires, 
+* we specify that we would like to see verbose output, 
+* that the current working directory should be packaged up and shipped to the worker nodes,
+* and that the command to run is: `python xxx.py`.
+
+While it is running, click on the "Overview", "Cluster", and "Jobs" tabs in the Ray dashboard.
+
+* Initially, the job will be a in PENDING state, as the runtime environment is set up. This is slow the first time (because of downloading the Python packages), but faster in subsequent runs because the packages are cached on the workers.
+Let the training job finish, and get to SUCCEEDED state. (This may take up to 10-15 minutes.)
+
+
+### Submit an infeasible job
+
+If we submit a job for which there is no node that satisfies the resource requirements. Run
+
+```bash
+# runs on jupyter container inside node-mltrain, from inside the "work" directory
+ray job submit --runtime-env runtime.json --entrypoint-num-gpus 2 --entrypoint-num-cpus 8 --verbose  --working-dir .  -- python3 train_style_transfer.py \
+    --data_root "$IMG_DATA_DIR" \
+    --global_batch_size 32 \
+    --micro_batch_size 8 \
+    --epochs 5 \
+    --precision fp32 \
+    --strategy none \
+    --export_path ./stylizer.pt
+```
+
+noting that we have no node with 2 GPUs - only two nodes, each with 1 GPU. 
+
+In the Ray dashboard "Overview" page, observe that this request is listed in "Demands" in the "Resource Status" section.
+
+The job will be stuck in PENDING state until we add a node with 2 GPUs to the cluster, at which time it can be scheduled.
+
+In a commercial cloud, when deployed with Kubernetes, a Ray cluster could [autoscale](https://docs.ray.io/en/latest/cluster/vms/user-guides/configuring-autoscaling.html) in this situation to accommodate the demand that could not be satisfied. Our cluster is not auto-scaling and we are not going to add a node with 2 GPUs, so this job will wait forever.
+
+Use Ctrl+C to stop the process in the Jupyter terminal. (The job is still submitted and PENDING, but not consuming worker resources, since it cannot be scheduled.)
+
+
+
+
+
+
 
