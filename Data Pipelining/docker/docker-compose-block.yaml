@@ -5,8 +5,6 @@ services:
     image: minio/minio
     container_name: minio
     restart: always
-    expose:
-      - "9000"
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -19,7 +17,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-
     command: server /data --console-address ":9001"
     volumes:
       - /mnt/block/minio_data:/data
