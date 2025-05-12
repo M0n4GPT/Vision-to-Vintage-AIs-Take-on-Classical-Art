@@ -56,7 +56,8 @@ This system modernizes **art appreciation through AI**, making it interactive, e
 
 ### System diagram
 
-![image](https://github.com/user-attachments/assets/da07032b-6d82-4b82-ac88-3cc2268867d1)
+
+![image](https://github.com/user-attachments/assets/0f8e0253-56a6-4493-b1b6-14eb9ba3c6fd)
 
     
 
