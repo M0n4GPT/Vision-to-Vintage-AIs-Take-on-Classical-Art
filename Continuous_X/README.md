@@ -1,180 +1,196 @@
 # Vision to Vintage: Continuous X (DevOps)
 
-Welcome to the DevOps module of our project **Vision to Vintage: AI's Take on Classical Art**. This guide walks you through the infrastructure, automation, and deployment pipeline implemented for this system, following the lifecycle from provisioning to production. All files referenced are located in the [`Continuous_X/`](./Continuous_X/) directory of this repository.
+Welcome to the DevOps module of our project **Vision to Vintage: AI's Take on Classical Art**. This guide is designed as a hands-on workbook for reproducing our end-to-end infrastructure, CI/CD, and deployment system using cloud-native tools and GitOps workflows. You can walk through the instructions line-by-line to deploy everything from scratch on Chameleon Cloud.
 
 ---
 
-## 📁 Project File Structure (within Continuous_X/)
+##  Final File Structure (within `Continuous_X/`)
 
 ```
 Continuous_X/
-├── ansible/                      # Ansible playbooks for configuring VMs and installing Kubernetes
-├── kubespray/                   # Kubespray fork for Kubernetes cluster deployment
-├── inventory/                   # Kubespray inventory and group_vars
-├── terraform/                   # Terraform scripts to provision infrastructure on Chameleon
-├── k8s/                         # K8s manifests and service configurations
-└── README.md                    # This guide
+├── ansible/              # Ansible playbooks and inventory for configuring VMs
+├── k8s/                  # Kubernetes manifests for model serving and workflows
+├── tf/                   # Terraform configs to provision infrastructure
+├── workflows/            # Argo Workflows for retraining and CI/CD pipelines
+├── LICENSE               # Project license
+└── README.md             # This DevOps workbook
 ```
 
 ---
 
-## 🚀 Step 1: Provision Infrastructure (Terraform)
+##  1. Provision Infrastructure using Terraform
 
-We use **Terraform** to provision 3 bare metal instances on Chameleon Cloud.
+We provision three bare metal instances on [Chameleon Cloud](https://www.chameleoncloud.org/) using [Terraform](https://www.terraform.io/). This ensures the infrastructure is version-controlled and reproducible.
 
-### Files:
-- [`terraform/`](./Continuous_X/terraform/) — contains `main.tf`, `variables.tf`, and `outputs.tf`
+###  Files: [`tf/`](./tf)
+- `main.tf`: defines OpenStack compute instances and networking
+- `variables.tf`: contains variable declarations
+- `outputs.tf`: exposes floating IPs
+- `terraform.tfvars`: sets variable values for the deployment
+- `provider.tf`: connects to the OpenStack provider
+- `versions.tf`: sets Terraform version constraints
 
-### Instructions:
-
-1. Authenticate with Chameleon OpenStack:
+###  Instructions:
 ```bash
-source openrc.sh  # Your Chameleon OpenStack credentials
-```
-2. Initialize and apply Terraform:
-```bash
-cd terraform
+# Authenticate with OpenStack
+source openrc.sh
+
+# Move into the Terraform directory
+cd tf
+
+# Initialize and apply
 terraform init
 terraform apply
 ```
-3. Note down the floating IP and internal IPs from the output. These will be used in Ansible inventory.
 
-> ⚠️ This setup avoids ClickOps by tracking all provisioning in version control.
+After execution, you'll get the instance IPs which are required for Ansible inventory.
 
 ---
 
-## 🛠 Step 2: Configure the VMs with Ansible
+##  2. Configure VMs with Ansible
 
-We automate configuration with **Ansible**, skipping manual installs.
+Once the VMs are provisioned, we configure them using [Ansible](https://www.ansible.com/) playbooks.
 
-### Files:
-- [`ansible/pre_k8s_configure.yml`](./Continuous_X/ansible/pre_k8s_configure.yml) — disables firewall, sets Docker daemon
-- [`ansible/inventory.yml`](./Continuous_X/ansible/inventory.yml) — maps IPs and hosts
+###  Files: [`ansible/`](./ansible)
+- `inventory.yml`: maps node hostnames and IPs
+- `ansible.cfg`: configures SSH proxy jump and inventory path
+- `general/hello_host.yaml`: sample hello-world playbook for connection test
+- `pre_k8s_configure.yml`: disables firewalld and sets Docker daemon config
+- `post_k8s_configure.yml`: sets up kubeconfig, dashboard, ArgoCD, Argo Workflows
 
-### Instructions:
-
-1. Set your Ansible config (WSL/Linux terminal):
+###  Instructions:
 ```bash
+# Set config and verify connection
 export ANSIBLE_CONFIG=./ansible/ansible.cfg
-```
-
-2. Verify SSH connectivity:
-```bash
 ansible -i ansible/inventory.yml all -m ping
-```
 
-3. Run the pre-K8s config:
-```bash
+# Pre-K8s system setup
 ansible-playbook -i ansible/inventory.yml ansible/pre_k8s_configure.yml
 ```
 
 ---
 
-## ☸️ Step 3: Install Kubernetes with Kubespray
+##  3. Install Kubernetes with Kubespray (via Clone)
 
-We use a customized fork of **Kubespray** to install a production-ready Kubernetes cluster.
+We use [Kubespray](https://github.com/kubernetes-sigs/kubespray) to install a production-grade Kubernetes cluster.
 
-### Files:
-- [`kubespray/`](./Continuous_X/kubespray/) — includes Kubespray roles and playbooks
-- [`inventory/mycluster/hosts.yaml`](./Continuous_X/inventory/mycluster/hosts.yaml)
-- [`group_vars/all.yml`](./Continuous_X/inventory/mycluster/group_vars/all.yml)
-
-### Instructions:
-
-1. Install dependencies:
+###  Instructions:
 ```bash
+# Clone Kubespray into the expected folder
+cd ansible/k8s
+git clone https://github.com/kubernetes-sigs/kubespray.git
 cd kubespray
 pip install --user -r requirements.txt
+
+# Copy your inventory (edit IPs as needed)
+cp -rfp inventory/sample inventory/mycluster
+vim inventory/mycluster/hosts.yaml  # Set your node IPs
+
+# Run the cluster installer
+ansible-playbook -i inventory/mycluster/hosts.yaml --become cluster.yml
 ```
 
-2. Edit `hosts.yaml` to reflect your actual VM IPs.
+You now have a working Kubernetes cluster.
 
-3. Run the installer:
+---
+
+##  4. Continuous Training + CI/CD Pipeline
+
+We use a combination of Argo Workflows, MLflow, and GitHub Actions to orchestrate retraining, evaluation, containerization, and staged deployment.
+
+###  Files: [`workflows/`](./workflows)
+- `train_model.yaml`: defines retraining steps
+- `evaluate_model.yaml`: calculates metrics and logs to MLflow
+- `deploy.yaml`: builds Docker image and updates staging
+
+###  CI/CD Trigger:
+- Git push to the `staging` branch
+- Scheduled retraining
+- External trigger (e.g. new labeled data)
+
+###  Sample Flow:
 ```bash
-ansible-playbook -i ../inventory/mycluster/hosts.yaml --become cluster.yml
-```
-
-4. On success, use `kubectl` to check cluster:
-```bash
-kubectl get nodes
+# Submit Argo Workflow from CLI
+argo submit workflows/train_model.yaml --namespace argo --watch
 ```
 
 ---
 
-## 🧠 Continuous Training + CI/CD (Outline)
+##  5. Staged Deployment (Staging → Canary → Production)
 
-### Tools Used:
-- Argo Workflows for retraining pipelines
-- MLflow for experiment tracking
-- Docker + GitHub Actions for CI/CD (see [`k8s/`](./Continuous_X/k8s/))
+We implement three deployment stages in our K8s cluster:
 
-> Each training run triggers evaluation, packaging, and deployment to staging.
+- **Staging**: auto-deploy on push or retrain
+- **Canary**: partial rollout for online evaluation
+- **Production**: full promotion after evaluation success
 
----
+Promotion is handled via Helm or custom ArgoCD workflows.
 
-## 🚦 Staged Deployment Architecture
-
-Our cluster supports **3 environments**:
-- `staging` — new models land here first
-- `canary` — exposed to partial traffic for online eval
-- `production` — after passing evaluation
-
-### Promotion Flow:
-1. New model → staging (auto)
-2. Passed offline eval → canary (manual trigger)
-3. Passed live eval → promote to prod (via Helm)
+>  No service is manually promoted or edited in-place — everything flows through Git.
 
 ---
 
-## 🔁 Immutable + Cloud-Native Principles
+##  6. Cloud-Native & GitOps Principles
 
-- All infra defined in code (`terraform/`, `ansible/`, `k8s/`)
-- All services containerized in Docker
-- Zero manual configuration after launch
+✔ **Infrastructure-as-Code**: Terraform + Ansible defined in `tf/` and `ansible/`  
+✔ **Immutable Deployments**: Changes only made through Git commits  
+✔ **Containers Everywhere**: All services containerized and deployed via K8s  
+✔ **Microservices**: ML, UI, inference, and dashboards are independent pods  
+✔ **CI/CD Pipelines**: Retraining → Evaluation → Docker Build → Deployment  
+✔ **Staged Environments**: Dev, canary, prod modeled using Helm & ArgoCD  
 
 ---
 
-## 📦 Running on Your Own Chameleon Account
+##  7. Running the Project on Chameleon Cloud
 
-### Prerequisites:
+###  Prerequisites:
 - Chameleon OpenStack account
-- Chameleon CLI credentials (`openrc.sh`)
-- SSH key uploaded to Chameleon
+- `openrc.sh` credentials
+- SSH key added to OpenStack dashboard
 
-### Full Launch Sequence:
+###  Full Launch Commands:
 ```bash
-# Provision infra
-cd terraform
+# Provision infrastructure
+cd tf
 terraform apply
 
-# Configure VMs
+# Pre-K8s setup
 cd ../ansible
 ansible-playbook -i inventory.yml pre_k8s_configure.yml
 
-# Deploy K8s
-cd ../kubespray
-ansible-playbook -i ../inventory/mycluster/hosts.yaml --become cluster.yml
+# Install Kubernetes via Kubespray
+cd k8s
+git clone https://github.com/kubernetes-sigs/kubespray.git
+cd kubespray
+ansible-playbook -i inventory/mycluster/hosts.yaml --become cluster.yml
+
+# Post-K8s setup (dashboard, ArgoCD)
+cd ../../../ansible
+ansible-playbook -i inventory.yml post_k8s_configure.yml
 ```
 
-Then deploy your services using `kubectl` or `helm`.
+You're now ready to deploy and monitor model workflows.
 
 ---
 
-## 👤 Author: Unit 3 - DevOps
-**Varijaksh Katti (Group 35)**
+##  Author – Unit 3: DevOps
+**Varijaksh Katti(Group 35)**
 
-Responsibilities:
-- Infrastructure-as-Code (Terraform + Ansible)
-- K8s provisioning (Kubespray)
-- CI/CD, automation, and staged deployment strategy
-- Cloud-native compliance
-
----
-
-## 📎 References
-- [Lab 3 - Build MLOps pipeline (PDF)](../Lab%203%20-%20Build%20MLops%20pipeline.pdf)
-- [Kubespray Docs](https://github.com/kubernetes-sigs/kubespray)
-- [Chameleon Cloud Docs](https://www.chameleoncloud.org/docs/)
+###  Responsibilities:
+- Provisioning via Terraform  
+- System configuration via Ansible  
+- Kubernetes setup via Kubespray  
+- CI/CD orchestration using Argo Workflows  *(in progress)*
+- Enabling GitOps and staged deployment  *(to be finalized)*
 
 ---
 
+##  References
+- [Lab 3: MLOps Pipeline (PDF)](../Lab%203%20-%20Build%20MLops%20pipeline.pdf)  
+- [Kubespray GitHub](https://github.com/kubernetes-sigs/kubespray)  
+- [Argo Workflows Docs](https://argo-workflows.readthedocs.io)  
+- [Chameleon Cloud Docs](https://www.chameleoncloud.org/docs/)  
+
+---
+
+For presentation walkthroughs or questions, reach out via GitHub Issues or during your assigned demo slot.
