@@ -84,7 +84,6 @@ To set it up:
 - Install Python requirements from `requirements.txt`
 - Copy the sample inventory and populate it with your node IPs and roles
 
-This approach avoids tracking large generated files in our own repository and allows always using the latest stable version of Kubespray.
 
 ---
 
