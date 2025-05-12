@@ -161,9 +161,9 @@ To make the services accessible from your browser, open the following ports in y
 Example:
 If our floating IP is 129.114.25.100:
 
-MLFlow: http://129.114.25.100:8000
+MLFlow: http://129.114.25.100:8080
 
-MinIO: http://129.114.25.100:9000
+MinIO: http://129.114.25.100:9060
 
 Jupyter: http://129.114.25.100:8888
 
