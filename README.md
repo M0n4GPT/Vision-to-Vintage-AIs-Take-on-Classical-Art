@@ -68,7 +68,7 @@ Here’s a structured table for summarizing the outside materials used in our pr
 |              | How it was created | Conditions of use |
 |--------------|--------------------|-------------------|
 |**Best Artworks of All Time** |Large-scale dataset of artworks with metadata across 1,000+ artists.[Link](https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time)|      Public Kaggle dataset – for non-commercial, research, and educational use. |
-|**WikiArt Full Collection (120K)** |High-resolution public domain images of artworks from The Met’s collection. [Link](https://www.kaggle.com/datasets/antoinegruson/-wikiart-all-images-120k-link/data)| Public Kaggle dataset – educational use; some artworks may be under copyright.|
+|**Random Image Sample Dataset** |This Dataset comprises of 3000 Random Pictures of 150 X 150 pixels. It contains mountains, cities, greenries, icelands, forest etc. [Link](https://www.kaggle.com/datasets/pankajkumar2002/random-image-sample-dataset)| Public Kaggle dataset – educational use; some artworks may be under copyright.|
 |**Style-Transfer-GAN Repo**| GitHub implementation of GAN-based style transfer for artistic image generation.  [Link](https://github.com/temilaj/Style-Transfer-GAN) |MIT License – free for research and commercial use with attribution.|
 |**VGG-19 Model**|Pre-trained convolutional neural network (CNN) used for style transfer. [Link](https://pytorch.org/vision/stable/models.html)|Open-source under **MIT License**, can be used for academic research.|
 |**CLIP (Contrastive Language–Image Pretraining)**|Foundation model by OpenAI that connects images and text for classification. [Link](https://openai.com/research/clip)|Open-source for **non-commercial research**; commercial usage requires permission.|
