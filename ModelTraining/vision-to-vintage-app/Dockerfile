@@ -16,7 +16,9 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 COPY . /app
 
 # Expose the port on which the app will run
-EXPOSE 8000
+EXPOSE 9090
+
+COPY tfhub_models /app/tfhub_models
 
 # Run the command to start the Flask server
 CMD ["python","app.py"]
