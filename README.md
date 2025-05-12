@@ -273,24 +273,41 @@ Satisfies Unit 7:
 -->
 
 #### Data pipeline
-This README provides a comprehensive walkthrough of the data pipelining component for the AI Art Experience project, following the guidelines specified for Unit 8. 
-All steps include references to scripts and outputs in this repository and instructions for running the pipeline on Chameleon Cloud.
+This section provides a detailed walkthrough of the data pipelining component developed for the AI Art Experience project, in alignment with the Unit 8 requirements. It outlines how we provisioned persistent storage, built offline and online data pipelines, and ensured production-readiness on Chameleon Cloud. Each part of the pipeline—from data extraction and preprocessing to storage organization and simulation of real-time data—is linked to specific scripts and artifacts in this repository to ensure transparency and reproducibility.
 
 **Persistent Storage**
-* Block Storage (Deployed on KVM@TACC):
-* Mounted at: /mnt/project35
-* Purpose: Hosts persistent application data (e.g., MLflow experiments, PostgreSQL data, model weights).
+To ensure durability and availability of critical application components, we provisioned persistent storage using two approaches:
+1] Block Storage (Deployed on KVM@TACC)
+
+Mount Point: /mnt/project35
+* Purpose: Serves as a reliable storage layer for essential application services such as:
+* MLflow experiment tracking data
+* PostgreSQL metadata
+* Model checkpoint files and logs
+* This storage is mounted as a persistent volume on the Chameleon KVM instance, ensuring that all data is retained across VM shutdowns or reboots.
+
+The following files define and document the block storage configuration:
+docker-compose-block.yaml: Docker Compose configuration that sets up MLflow, MinIO, Jupyter, and PostgreSQL with persistent volumes.
+block.md: Supplementary notes explaining the volume setup, mounting process, and troubleshooting steps.
+
 * [docker-compose-block.yaml] (https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/main/Data%20Pipelining/docker/docker-compose-block.yaml)
 * [block.md] (https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/main/Data%20Pipelining/snippets/block.md)
 
 **Object Storage (Deployed via MinIO on Baremetal):**
-* Mounted using rclone at: /mnt/project35 (alias: chi_tacc:object-persist-project35)
-* Purpose: Stores training data (images from 50 artists).
-* Contents: Structured as:
-  /mnt/project35/train
-  /mnt/project35/test
-  /mnt/project35/val
+We utilized Chameleon’s object storage, mounted via rclone, to host all large-scale datasets used for training and evaluating our neural style transfer model.
+
+🔹 Mount Details
+* Mounted Path: /mnt/project35
+* Remote Alias: chi_tacc:object-persist-project35
+* Mount Method: rclone FUSE mount from Chameleon’s object store to the local filesystem of the training node, allowing seamless access during both preprocessing and model training stages.
+
+🔹 Purpose
+* The object storage serves as the central data repository for all image assets required by the project.
+*It is used to store:
+1] Style datasets (paintings by 50 artists)
 * Each contains subfolders for individual artist names (e.g., train/monet/, val/van_gogh/). [Link to the object store](https://chi.tacc.chameleoncloud.org/project/containers/container/object-persist-project35)
+
+2] Random input images (used for training and simulating inference)
 * We have used another dataset with random images which is stored inside the random_inputs folder. Inside this folder the images inside random_train and random_val are used for training purposes and random_test is used for simulating production data.
 * [Link to all the yaml file for creating persistant storage](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/docker)
 * [Link to the snippets folder with .md files](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/snippets)
@@ -303,29 +320,77 @@ Dataset
 * Format: ZIP 
 * Lineage: Downloaded and extracted in the pipeline using kaggle CLI.
 
-**Pipeline Script:** Data Pipelining/docker/docker-compose-etl.yaml
+Production Data Saving Setup: To enable feedback-loop data collection, we implemented the following steps:
+1] Created a production bucket in MinIO
+* We added a sidecar container (minio-init) in docker-compose-production.yaml to programmatically create the bucket on startup using the MinIO CLI.
+* [Link to Production Data yaml file](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/main/Data%20Pipelining/docker/docker-compose-production.yaml)
+* [More details in Production Data.md file](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/main/Data%20Pipelining/snippets/Offline%20Data.md)
 
-* Functions:
-1] Extract the ZIP
-2] Randomly split each artist’s folder into train (70%), val (15%), test (15%)
-3] Organize files into /train/artist_name/, /val/artist_name/, /test/artist_name/
-4] Upload structured data via rclone
+2] Updated app.py in Vision-to-Vintage App
+* Added environment variables to access MinIO (MINIO_URL, MINIO_USER, MINIO_PASSWORD).
+* Integrated boto3 to connect to the object store.
+* After stylization, we uploaded each image to the production bucket with tags for predicted style and timestamp.
+* [Link to the app.py](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/blob/mona-feature-update/ModelTraining/vision-to-vintage-app/app.py)
 
-* Preprocessing (within pipeline)
-* Resizing all images to 256x256
-* Normalizing pixel values
-* Splitting is done artist-wise to preserve class boundaries and avoid leakage
+
+**Pipeline Script:** [docker files link with etl pipeline](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/docker)
+
+This Docker Compose configuration defines a containerized ETL pipeline designed to automate the preprocessing and organization of the artwork dataset prior to training. The pipeline ensures reproducibility and simplifies deployment on Chameleon Cloud.
+
+🔹 Key Functions Performed by the Pipeline:
+1] Extraction:
+* Automatically unzips the raw dataset downloaded from Kaggle.
+* Handles nested folder structures to ensure all artist folders are isolated.
+* Stratified Splitting:
+  For each artist folder, images are randomly divided into:
+  train/artist_name/ (70%)
+  val/artist_name/ (15%)
+  test/artist_name/ (15%)
+* Splitting ensures consistent distribution of data across splits without leaking validation/test data into training.
+
+2] Directory Reorganization:
+* Reconstructs the entire dataset into a consistent hierarchical format based on artist names, compatible with PyTorch-style ImageFolder loaders.
+
+3] Data Upload:
+* The processed dataset is uploaded to Chameleon’s object storage using rclone, which syncs the local /processed_dataset/ folder with the mounted path /mnt/project35/.
+
+* Preprocessing Steps Embedded in the Pipeline:
+a) Resizing:
+All images are resized to a standard resolution of 256x256 pixels for compatibility with the input shape expected by the model.
+
+b) Normalization:
+Pixel values are normalized using standard image preprocessing techniques (e.g., dividing by 255 and applying mean-std normalization if needed during model loading).
+
+c) Artist-Wise Splitting:
+Ensures no data leakage by treating each artist’s dataset independently. This guarantees that styles seen during training do not bleed into evaluation sets.
 
  **Online Data Pipeline**
- Simulated Production Data Script
+To mimic real-time usage of the application, we implemented a script that continuously sends image data to the deployed inference endpoint, replicating a production environment.
 
+Simulated Production Data Script
  * [Script](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/Simulate%20Online%20Data)
- * Function: Mimics real-time image arrival by periodically sending images from the production folder (random_test folder inside Object store) to the model inference API endpoint.
- * Format: Python script uses requests to POST image files to endpoint every few seconds.
+   
+Functionality:
+* The script loops through the images stored in the random_test folder (located in the random_inputs/ directory on object storage).
+* At configurable intervals (e.g., every 5 seconds), it sends a new image via an HTTP POST request to the model’s REST API.
+* This simulates user-generated image uploads during real-world usage and triggers inference in a time-distributed manner.
+
+Format:
+* Written in Python, the script uses the requests library to POST image files.
+* API expects base64-encoded image payloads formatted in JSON.
+* This design helps stress-test the serving pipeline and verify response behavior under ongoing usage.
 
 **Data Dashboard**
-Dashboard Location: [Dashboard Folder](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/Data%20Dashboard)
-Runs on: 
-Benefit: Access the dashboard by navigating to [link](http://129.114.25.100:8050) in your web browser.
-* Allows the end-user or admin to quickly assess if data is balanced and suitable for training or production.
+The dashboard provides a visual overview of the datasets stored in object storage, offering insights into data quality, class distribution, and structure validation.
+* Technology Used: Built with Plotly Dash, this interactive dashboard is hosted on a Chameleon VM and visualizes dataset metadata.
+* Dashboard Location: [Dashboard Folder](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/Data%20Pipelining/Data%20Dashboard)
+* Runs on:  Access the dashboard by navigating to [link](http://129.114.25.100:8050) in your web browser.
+* Key Features:
+     Displays the distribution of images across train, val, and test folders for each artist
+     Verifies image resolution uniformity
+     Tracks total number of samples in random input sets vs. style datasets
+     
+* Benefit:
+     Enables researchers and admins to audit data quality before and during training
+     Quickly identify class imbalance, data corruption, or misplacement across splits
 
