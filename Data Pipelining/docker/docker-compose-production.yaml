@@ -7,42 +7,51 @@ services:
       dockerfile: Dockerfile
     container_name: vision_to_vintage
     ports:
-      - "9190:9090"
+      - "9090:9090"
     environment:
-      - MINIO_URL=http://minio:9060
-      - MINIO_USER=minioadmin
-      - MINIO_PASSWORD=minioadmin123
-    networks:
-      - production_net
+      - MINIO_URL=http://minio:9000
+      - MINIO_USER=your-access-key
+      - MINIO_PASSWORD=your-secret-key
     depends_on:
       - minio
+    networks:
+      - production_net
 
   minio:
     image: minio/minio
     container_name: minio
+    restart: always
+    expose:
+      - "9000"
     ports:
       - "9000:9000"
-      - "9001:9001"
+      - "9060:9001"  # map console address to 9060
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin123
+      MINIO_ROOT_USER: "your-access-key"
+      MINIO_ROOT_PASSWORD: "your-secret-key"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    command: server /data --console-address ":9001"
     volumes:
-      - minio_data:/data
-    command: server /data --console-address ':9001'
+      - /mnt/block/minio_data:/data
     networks:
       - production_net
 
   minio-init:
     image: minio/mc
-    container_name: minio_init
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     restart: "no"
     entrypoint: >
       /bin/sh -c "
-      sleep 5 &&
-      mc alias set myminio http://minio:9000 minioadmin minioadmin123 &&
-      mc mb -p myminio/production || echo 'Bucket already exists'
+      mc alias set minio http://minio:9000 your-access-key your-secret-key &&
+      mc mb -p minio/mlflow-artifacts || echo 'Bucket mlflow-artifacts exists' &&
+      mc mb -p minio/production || echo 'Bucket production exists'
       "
     networks:
       - production_net
@@ -50,6 +59,3 @@ services:
 networks:
   production_net:
     external: true
-
-volumes:
-  minio_data:
