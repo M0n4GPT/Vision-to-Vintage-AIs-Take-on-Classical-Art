@@ -1,0 +1,15 @@
+replicaCount: 2  
+image:
+  repository: registry.kube-system.svc.cluster.local:5000/vision-to-vintage-app
+  tag: staging-1.0.0  
+service:
+  port: 8081  
+  externalIP: ""  
+
+resources:
+  limits:
+    cpu: "750m"
+    memory: "384Mi"
+  requests:
+    cpu: "300m"
+    memory: "192Mi"

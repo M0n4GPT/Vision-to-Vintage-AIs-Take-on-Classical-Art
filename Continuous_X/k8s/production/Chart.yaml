@@ -1,0 +1,5 @@
+apiVersion: v2
+name: vision-to-vintage
+version: 1.0.0
+description: A production deployment of the Vision-to-Vintage style transfer app
+appVersion: "1.0.0"

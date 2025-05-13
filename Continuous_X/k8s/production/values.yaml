@@ -1,0 +1,15 @@
+replicaCount: 3  
+
+image:
+  repository: registry.kube-system.svc.cluster.local:5000/vision-to-vintage-app
+  tag: prod-1.0.0  
+service:
+  port: 80  
+  externalIP: ""  
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "512Mi"
+  requests:
+    cpu: "500m"
+    memory: "256Mi"

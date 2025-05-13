@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi
+  namespace: vision-to-vintage-platform
+spec:
+  replicas: 2  # Can be increased for scalability
+  selector:
+    matchLabels:
+      app: fastapi
+  template:
+    metadata:
+      labels:
+        app: fastapi
+    spec:
+      containers:
+        - name: fastapi
+          image: {{ .Values.fastapi.image }}  # e.g. registry/project/fastapi:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ENV
+              value: "production"
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow:8000"
+            - name: MINIO_ENDPOINT
+              value: "http://minio:9000"
+            # Add any other required environment variables here
+          command: ["uvicorn"]
+          args: ["app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi
+  namespace: vision-to-vintage-platform
+spec:
+  selector:
+    app: fastapi
+  ports:
+    - port: 8000
+      targetPort: 8000
+  externalIPs:
+    - {{ .Values.fastapi.externalIP }}
