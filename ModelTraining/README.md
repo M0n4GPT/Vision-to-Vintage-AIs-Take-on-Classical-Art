@@ -1,5 +1,14 @@
 # Model Training Overview
 
+> **Update after final presentation**  
+> Our project web application demo is live at: [http://129.114.25.100:9090](http://129.114.25.100:9090)  
+> Shruti's data dashboard is available at: [http://129.114.25.100:8050](http://129.114.25.100:8050)  
+> Feel free to try them out anytime!  
+>  
+> Additionally, I’ve added deployment notebooks under the `notebooks/` folder.  
+> These are all the same to the previous markdown training guides but presented in notebook format for convenience.
+
+
 ## Directory Structure
 
 ```bash
