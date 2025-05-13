@@ -30,12 +30,9 @@ The output is a stylized version of the content image, reflecting the chosen sty
 
 This setup supports our customer-facing web app, where users can upload their own images with any contents they insterested in. And from 50 labels of artist styles that have been trained in our models from the dataset, the model randomly selects one style and outputs a transformed image in that artistic style, while preserving the original content of the uploaded image and only altering its style. This forms the basis of our interactive web application, where users are encouraged to guess which style the model applied. Their guesses are compared to the actual selected style to generate feedback, which serves as an indicator of how recognizable and effective the model's style transformation is.
 
-
 ### Model Architecture
 
-I use a pretrained VGG19 network as the encoder for style transfer.
-
-- **Encoder**: Pretrained `VGG19` feature extractor, frozen
+- **Encoder**: Pretrained `VGG19` feature extractor, frozen early layers and unfrozen deeper layers
 - **Style Transfer Layer**: AdaIN layer that aligns mean and std of content features to style features
 - **Decoder**: A multi-layer ConvNet that reconstructs RGB images
 
@@ -60,11 +57,11 @@ t = (c_feat - mean(c_feat)) / std(c_feat) * std(s_feat) + mean(s_feat)
 
 **Total trainable parameters**: ~13–15M
 
-It’s powerful enough to learn diverse styles while remaining lightweight and stable for training and deployment.
+It's powerful enough to learn diverse styles while remaining lightweight and stable for training and deployment.
 
 ### Why use VGG19 and why use it in this way
 
-VGG19 is a deep convolutional neural network originally trained for image classification. In order to classify images, it has to build a **rich internal representation** of visual content — from edges and textures to full object structures. This makes it an ideal **feature extractor**.
+VGG19 is a deep convolutional neural network originally trained for image classification. In order to classify images, it has to build a rich internal representation of visual content — from edges and textures to full object structures. This makes it an ideal **feature extractor**.
 
 - The **early layers** of VGG19 capture low-level visual features like **edges, lines, and colors**.
 - The **deeper layers** capture high-level semantic information like **object shapes, structures, and spatial layout**.
@@ -79,9 +76,9 @@ This hierarchical structure makes it possible to separate:
 For a given input image,
 
 - Use an intermediate **deep layer** (e.g., `block5_conv2`) to represent **content**
-- Use several **shallow to mid layers** (e.g., `block1_conv1` to `block5_conv1`) to extract **style** — i.e., textures and visual patterns
+- Use several **shallow to mid layers** (e.g., `block1_conv1` to `block5_conv1`) to extract **style** (textures and visual patterns)
 
-Then, through **Adaptive Instance Normalization (AdaIN)**, we align the statistical properties (mean and standard deviation) of the content features to match those of the style features. This gives us a transformed feature map that **preserves the structure of the original image** while adopting the **style of the target image**.
+Then, through **Adaptive Instance Normalization**, align the statistical properties (mean and standard deviation) of the content features to match those of the style features. This gives us a transformed feature map that **preserves the structure of the original image** while adopting the **style of the target image**.
 
 ---
 
@@ -95,7 +92,7 @@ All training scripts are located in the `train/` directory. Run the train proces
 python train_style_transfer.py \
   --data_root "$IMG_DATA_DIR" \
   --global_batch_size 32 \
-  --epochs 10 \
+  --epochs 20 \
   --strategy ddp \
   --export_path ./stylizer.pt
 ```
@@ -147,11 +144,54 @@ For a complete walkthrough of my training setup and reproduction steps, please r
 - Hosted MLFlow UI at port 8080 on the VM node, using floating IP to communicate with the tracking server.
 - Experiment artifacts and logs were stored on block storage then.
 
-### Visualized Metrics
+### Training Metrics for Different Strategies
 
-*Insert img_link here.*
+All intermediate results and screenshots captured during the experiment runs have been uploaded to the `imgs` folder. [Link](https://github.com/M0n4GPT/Vision-to-Vintage-AIs-Take-on-Classical-Art/tree/main/ModelTraining/imgs) Here I've compiled some data from those results to reflect the impact of different training strategies.
 
----
+*To improve experimental efficiency, these tests were conducted on a small subset of the dataset. However, the code structure remained unchanged. Below is a summary of the experimental results.*
+
+#### Reduced batch size/Gradient accumulation
+
+Training time per epoch remained consistent at **\~70 seconds** when using smaller or moderately-sized batch settings (Experiment 2 and 4), but **increased slightly to 77 seconds** in Experiment 3 due to the high memory load from setting both `global_batch_size` and `micro_batch_size` to 128.
+
+* **Experiment 2** (micro: 8, global: 32) — 70s/epoch, \~1.07 GB memory
+* **Experiment 3** (micro: 128, global: 128) — 77s/epoch, \~15.3 GB memory
+* **Experiment 4** (micro: 32, global: 32) — 70s/epoch, \~3.9 GB memory
+* **Experiment 5** (micro: 32, global: 128) — 67s/epoch, \~3.91 GB memory
+
+This suggests that while large batch sizes impose a much higher memory cost, making smaller micro-batches more efficient for single-node runs. Carefully tuning the balance between global and micro batch sizes can allowe better GPU utilization without overwhelming memory.
+
+#### Mixed precision
+
+In Experiment 6, we enabled mixed-precision training using `--precision amp`, while keeping the same batch configuration as Experiment 5:
+
+* **Experiment 5** (--precision fp32) — 67s/epoch, \~3.91 GB memory, total_loss ~0.21
+* **Experiment 6** (--precision amp) — 34.5s/epoch, \~2.37 GB memory, total_loss ~0.26
+
+
+
+Mixed precision significantly reduced memory usage and **cut training time in half** compared to the full-precision run in Experiment 5. However, this came with a slight degradation in training quality, as reflected in a higher total loss.
+
+This demonstrates the practical benefit of AMP in accelerating training while preserving quality, especially valuable in resource-constrained environments.
+
+#### Distributed Training with 2x gpu\_mi100 DDP
+
+* **Experiment 6** (none) — 34.5s/epoch, \~2.37 GB memory
+* **Experiment 7** (DDP) — 22.1s/epoch,  \~2.38 GB per GPU memory
+
+DDP allowed us to cut training time by more than a third compared to single-GPU AMP training, with almost the same in memory usage.
+
+This result confirms the effectiveness of combining AMP and DDP for large-scale model training: AMP reduces memory and speeds up computation, while DDP parallelizes the workload across GPUs to fully utilize available hardware.
+
+#### Distributed Training with 2x gpu\_mi100 FSDP
+
+* **Experiment 7** (DDP) — 22.1s/epoch,  \~2.38 GB per GPU memory
+* **Experiment 8** (FSDP) — 21.9s/epoch,  \~2.33 GB per GPU memory
+
+Compared to DDP, the memory was saved, and the training time remained nearly identical.
+
+Why didn't FSDP yield larger memory savings? In our case, The encoder is partially frozen or partially trainable (small parameter size), and AdaIN introduces no additional large state. As a result, **there was little memory pressure for FSDP to alleviate**, and its benefits were limited.
+
 
 ## ​Scheduling training jobs​ + Using Ray Train
 
@@ -168,4 +208,8 @@ To support large-scale and reproducible training, I integrated Ray Train in my c
 
 Below is some snapshots of the Ray Cluster Dashboard UI captured during training, showcasing the live status of submitted jobs, resource utilization, and active workers.
 
-*Insert Ray dashboard screenshot here.*
+![Ray Cluster Dashboard](imgs/ray/RunningJobPending1.png)
+
+![Ray Cluster Dashboard – Infeasible Job](imgs/ray/RunningJobInfeasiable.png)
+
+
