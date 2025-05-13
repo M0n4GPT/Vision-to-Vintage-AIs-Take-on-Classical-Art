@@ -22,13 +22,14 @@ spec:
         - |
           echo "Deploying model {{inputs.parameters.model-version}} to {{inputs.parameters.environment}}..."
           tag="{{inputs.parameters.environment}}-1.0.{{inputs.parameters.model-version}}"
-          app_name="gourmetgram-{{inputs.parameters.environment}}"
+          app_name="vision-to-vintage-{{inputs.parameters.environment}}"
 
           argocd login argocd-server.argocd.svc.cluster.local \
             --username admin \
             --password "$ARGOCD_PASSWORD" \
             --insecure
 
+          echo "Setting image tag to $tag for app $app_name..."
           argocd app set "$app_name" --helm-set-string image.tag=$tag
           argocd app sync "$app_name"
       env:
